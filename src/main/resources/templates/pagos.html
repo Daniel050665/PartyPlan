@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pagos</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Pagos</h1>
+
+    <a th:href="@{/pagos/nuevo}">Nuevo pago</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reserva</th>
+                <th>Monto</th>
+                <th>Método de pago</th>
+                <th>Fecha de pago</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="p : ${pagos}">
+
+                <td th:text="${p.id}"></td>
+
+                <td th:text="${p.reserva.id}"></td>
+
+                <td th:text="${p.monto}"></td>
+
+                <td th:text="${p.metodoPago}"></td>
+
+                <td th:text="${p.fechaPago}"></td>
+
+                <td th:text="${p.estadoPago}"></td>
+
+                <td>
+
+                    <a th:href="@{/pagos/{id}(id=${p.id})}">
+                        Ver
+                    </a>
+
+                    |
+
+                    <a th:href="@{/pagos/editar/{id}(id=${p.id})}">
+                        Editar
+                    </a>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

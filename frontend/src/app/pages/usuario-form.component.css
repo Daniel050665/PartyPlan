@@ -1,0 +1,11 @@
+/* La etiqueta <app-usuario-form> ocupa todo el ancho de la ventana */
+:host {
+  display: block;
+}
+
+/* Mensaje rojo debajo de un campo con error */
+.field-error {
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 500;
+}

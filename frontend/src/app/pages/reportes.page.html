@@ -1,0 +1,49 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Análisis</p>
+    <h1>Reportes</h1>
+    <p class="muted">Indicadores clave de reservas, ingresos y popularidad de los planes.</p>
+  </div>
+  <!-- Vuelve a pedir los reportes. Se desactiva mientras cargan -->
+  <button class="btn btn-ghost" (click)="cargar()" [disabled]="cargando">
+    <app-icon name="sparkles" /> Actualizar
+  </button>
+</header>
+
+<div class="grid-reportes">
+  <section class="card">
+    <header class="card-head">
+      <span class="kpi-icon"><app-icon name="calendar" /></span>
+      <div>
+        <h2>Reservas por estado</h2>
+        <p class="muted small">{{ totalReservas }} reservas en total</p>
+      </div>
+    </header>
+    <app-bar-list [items]="barrasEstado" />
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="kpi-icon success"><app-icon name="money" /></span>
+      <div>
+        <h2>Ingresos por método de pago</h2>
+        <p class="muted small">
+          {{ totalIngresos | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} recaudados (solo pagos confirmados)
+        </p>
+      </div>
+    </header>
+    <app-bar-list [items]="barrasIngresos" />
+  </section>
+
+  <section class="card span-2">
+    <header class="card-head">
+      <span class="kpi-icon warning"><app-icon name="trophy" /></span>
+      <div>
+        <h2>Ranking de planes más reservados</h2>
+        <p class="muted small">Los planes favoritos de los clientes</p>
+      </div>
+    </header>
+    <!-- ranking=true: muestra el numero de posicion 1, 2, 3... -->
+    <app-bar-list [items]="barrasRanking" [ranking]="true" />
+  </section>
+</div>

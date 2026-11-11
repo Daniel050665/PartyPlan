@@ -1,0 +1,118 @@
+<!-- Bienvenida -->
+<section class="welcome">
+  <div>
+    <p class="eyebrow">{{ saludo() }}, {{ authService.obtenerUsuario() }}</p>
+    <h1>Tu noche en Bogotá, bajo control.</h1>
+    <p class="muted">Resumen en tiempo real de reservas, pagos y experiencias.</p>
+  </div>
+  <a routerLink="/reservas" class="btn btn-primary"><app-icon name="plus" /> Nueva reserva</a>
+</section>
+
+<!-- 4 tarjetas con numeros. Cada una es un enlace a su pagina -->
+<div class="kpis">
+  <a class="kpi" routerLink="/reservas">
+    <span class="kpi-icon"><app-icon name="calendar" /></span>
+    <div>
+      <span class="muted small">Reservas</span>
+      <strong>{{ reservas.length }}</strong>
+      <span class="kpi-sub">{{ totalPendientes }} pendientes</span>
+    </div>
+  </a>
+  <a class="kpi" routerLink="/pagos">
+    <span class="kpi-icon success"><app-icon name="money" /></span>
+    <div>
+      <span class="muted small">Ingresos</span>
+      <strong>{{ totalIngresos | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+      <span class="kpi-sub">pagos confirmados</span>
+    </div>
+  </a>
+  <a class="kpi" routerLink="/usuarios">
+    <span class="kpi-icon info"><app-icon name="users" /></span>
+    <div>
+      <span class="muted small">Clientes activos</span>
+      <strong>{{ totalClientesActivos }}</strong>
+      <span class="kpi-sub">de {{ usuarios.length }} registrados</span>
+    </div>
+  </a>
+  <a class="kpi" routerLink="/planes">
+    <span class="kpi-icon warning"><app-icon name="ticket" /></span>
+    <div>
+      <span class="muted small">Planes</span>
+      <strong>{{ planes.length }}</strong>
+      <span class="kpi-sub">en {{ lugares.length }} lugares</span>
+    </div>
+  </a>
+</div>
+
+<div class="dash-grid">
+  <!-- Columna izquierda: proximas reservas -->
+  <section class="card">
+    <header class="card-head between">
+      <div>
+        <h2>Próximas reservas</h2>
+        <p class="muted small">Desde hoy en adelante</p>
+      </div>
+      <a routerLink="/reservas" class="link">Ver todas <app-icon name="arrow" [size]="14" /></a>
+    </header>
+
+    @if (cargando) {
+      <div class="skeleton-rows"><span></span><span></span><span></span></div>
+    } @else if (proximasReservas.length === 0) {
+      <div class="empty">
+        <app-icon name="calendar" [size]="28" />
+        <p>No hay reservas próximas.</p>
+      </div>
+    } @else {
+      <ul class="agenda">
+        @for (reserva of proximasReservas; track reserva.id) {
+          <li>
+            <!-- Cuadrito de calendario: mes arriba ("oct") y dia abajo ("30") -->
+            <div class="date-tile">
+              <span>{{ reserva.fecha | date: 'MMM' }}</span>
+              <strong>{{ reserva.fecha | date: 'd' }}</strong>
+            </div>
+            <div class="agenda-info">
+              <strong>{{ reserva.plan?.nombre }}</strong>
+              <span class="muted small">
+                {{ reserva.usuario?.nombreCompleto }} · {{ horaCorta(reserva.hora) }} h · {{ reserva.numeroPersonas }} pers.
+              </span>
+            </div>
+            <span [class]="'badge badge-' + reserva.estado.toLowerCase()">{{ reserva.estado | titlecase }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- Columna derecha -->
+  <div class="dash-side">
+    <section class="card">
+      <header class="card-head">
+        <div>
+          <h2>Estado de reservas</h2>
+          <p class="muted small">Distribución actual</p>
+        </div>
+      </header>
+      <app-bar-list [items]="barrasEstado" />
+    </section>
+
+    <section class="card">
+      <header class="card-head">
+        <div>
+          <h2>Clientes recientes</h2>
+        </div>
+      </header>
+      <ul class="people">
+        @for (usuario of clientesRecientes; track usuario.id) {
+          <li>
+            <span class="avatar sm">{{ iniciales(usuario.nombreCompleto) }}</span>
+            <div class="stack">
+              <strong>{{ usuario.nombreCompleto }}</strong>
+              <span class="muted small">{{ usuario.correo }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+</div>

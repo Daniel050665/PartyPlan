@@ -1,0 +1,141 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Gestión</p>
+    <h1>Pagos</h1>
+    <p class="muted">Registra y controla el estado de los pagos de cada reserva.</p>
+  </div>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Registrar pago</button>
+</header>
+
+<!-- Tarjetas con los totales en pesos -->
+<div class="kpis kpis-3">
+  <div class="kpi">
+    <span class="kpi-icon success"><app-icon name="check" /></span>
+    <div>
+      <span class="muted small">Recaudado</span>
+      <strong>{{ sumarPorEstado('PAGADO') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+    </div>
+  </div>
+  <div class="kpi">
+    <span class="kpi-icon warning"><app-icon name="clock" /></span>
+    <div>
+      <span class="muted small">Por cobrar</span>
+      <strong>{{ sumarPorEstado('PENDIENTE') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+    </div>
+  </div>
+  <div class="kpi">
+    <span class="kpi-icon danger"><app-icon name="x" /></span>
+    <div>
+      <span class="muted small">Rechazado</span>
+      <strong>{{ sumarPorEstado('RECHAZADO') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input placeholder="Buscar por cliente, plan o método…" [(ngModel)]="textoBusqueda" />
+    </label>
+    <span class="muted small">{{ pagosFiltrados().length }} pagos</span>
+  </div>
+
+  @if (cargando) {
+    <div class="skeleton-rows"><span></span><span></span><span></span></div>
+  } @else if (pagosFiltrados().length === 0) {
+    <div class="empty">
+      <app-icon name="card" [size]="28" />
+      <p>No hay pagos registrados.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Reserva</th>
+            <th>Método</th>
+            <th>Fecha</th>
+            <th class="num">Monto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pago of pagosFiltrados(); track pago.id) {
+            <tr>
+              <td>
+                <div class="stack">
+                  <strong>Reserva #{{ pago.reserva?.id }} · {{ pago.reserva?.usuario?.nombreCompleto }}</strong>
+                  <span class="muted small">{{ pago.reserva?.plan?.nombre }}</span>
+                </div>
+              </td>
+              <td><span class="chip">{{ pago.metodoPago | titlecase }}</span></td>
+              <td class="muted">{{ pago.fechaPago | date: 'd MMM y' }}</td>
+              <td class="num"><strong>{{ pago.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong></td>
+              <td>
+                <!-- Igual que en reservas: cambiar el estado sin abrir el formulario -->
+                <select
+                  [class]="'badge-select badge-' + pago.estadoPago.toLowerCase()"
+                  [ngModel]="pago.estadoPago"
+                  (ngModelChange)="cambiarEstado(pago, $event)"
+                  aria-label="Cambiar estado del pago"
+                >
+                  @for (estado of estados; track estado) {
+                    <option [value]="estado">{{ estado | titlecase }}</option>
+                  }
+                </select>
+              </td>
+              <td class="actions">
+                <button class="icon-btn" title="Editar" (click)="abrirEditar(pago)"><app-icon name="edit" /></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-modal [open]="modalAbierto" [title]="formulario.id ? 'Editar pago' : 'Registrar pago'" (closed)="cerrarModal()">
+  <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
+    <label class="field full">
+      <span>Reserva</span>
+      <!-- Al elegir una reserva tambien se llama a sugerirMonto() -->
+      <select name="reservaId" [(ngModel)]="formulario.reservaId" (ngModelChange)="sugerirMonto($event)" required>
+        <option [ngValue]="null" disabled>Selecciona una reserva</option>
+        @for (reserva of reservasDisponibles(); track reserva.id) {
+          <option [ngValue]="reserva.id">#{{ reserva.id }} · {{ reserva.usuario?.nombreCompleto }} · {{ reserva.plan?.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span>Monto (COP)</span>
+      <input name="monto" type="number" min="0" step="1000" [(ngModel)]="formulario.monto" required />
+    </label>
+    <label class="field">
+      <span>Fecha de pago</span>
+      <input name="fechaPago" type="date" [(ngModel)]="formulario.fechaPago" required />
+    </label>
+    <label class="field">
+      <span>Método</span>
+      <select name="metodoPago" [(ngModel)]="formulario.metodoPago" required>
+        @for (metodo of metodos; track metodo) {
+          <option [value]="metodo">{{ metodo | titlecase }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span>Estado</span>
+      <select name="estadoPago" [(ngModel)]="formulario.estadoPago" required>
+        @for (estado of estados; track estado) {
+          <option [value]="estado">{{ estado | titlecase }}</option>
+        }
+      </select>
+    </label>
+    <div class="modal-actions full">
+      <button type="button" class="btn btn-ghost" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="guardando || f.invalid">Guardar</button>
+    </div>
+  </form>
+</app-modal>

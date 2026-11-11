@@ -1,0 +1,79 @@
+<!-- Si menuAbierto es true se agrega la clase "menu-abierto" (el CSS muestra el menu en celular) -->
+<div class="shell" [class.menu-abierto]="menuAbierto">
+  <aside class="sidebar">
+    <!-- Logo -->
+    <a class="brand" routerLink="/" (click)="cerrarMenu()">
+      <span class="brand-mark"><app-icon name="moon" [size]="18" /></span>
+      <span class="brand-text">Party<b>Plan</b></span>
+    </a>
+
+    <nav class="nav">
+      <span class="nav-label">General</span>
+      @for (opcion of opcionesGenerales; track opcion.ruta) {
+        <!-- routerLinkActive="active": si estamos en esa pagina, el enlace se pinta resaltado.
+             exact: true solo para Inicio ('/'), porque todas las rutas empiezan por '/' -->
+        <a
+          [routerLink]="opcion.ruta"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: opcion.ruta === '/' }"
+          (click)="cerrarMenu()"
+        >
+          <app-icon [name]="opcion.icono" />
+          <span>{{ opcion.etiqueta }}</span>
+        </a>
+      }
+
+      <span class="nav-label">Gestión</span>
+      @for (opcion of opcionesGestion; track opcion.ruta) {
+        <a [routerLink]="opcion.ruta" routerLinkActive="active" (click)="cerrarMenu()">
+          <app-icon [name]="opcion.icono" />
+          <span>{{ opcion.etiqueta }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Contador de acciones (signal). contadorService.acciones() LEE el valor del signal.
+         El boton llama a reiniciar(), que usa set(0). -->
+    <div class="contador">
+      <div class="contador-info">
+        <span>Acciones en esta sesión</span>
+        <strong>{{ contadorService.acciones() }}</strong>
+      </div>
+      <button type="button" class="icon-btn sm" (click)="contadorService.reiniciar()" title="Reiniciar contador" aria-label="Reiniciar contador">
+        <app-icon name="x" [size]="14" />
+      </button>
+    </div>
+
+    <!-- Usuario conectado y boton de salir -->
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <span class="avatar">{{ inicialDelUsuario() }}</span>
+        <div class="user-info">
+          <strong>{{ authService.obtenerUsuario() }}</strong>
+          <span>Administrador</span>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" (click)="cerrarSesion()" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <app-icon name="logout" />
+      </button>
+    </div>
+  </aside>
+
+  <!-- Fondo oscuro detras del menu en celular: al tocarlo se cierra el menu -->
+  <div class="backdrop" (click)="cerrarMenu()"></div>
+
+  <div class="main">
+    <!-- Barra superior: solo se ve en celular (ver el CSS) -->
+    <header class="topbar">
+      <button type="button" class="icon-btn" (click)="abrirMenu()" aria-label="Abrir menú">
+        <app-icon name="menu" />
+      </button>
+      <span class="brand-text">Party<b>Plan</b></span>
+    </header>
+
+    <main class="content">
+      <!-- Aqui se dibuja la pagina actual (Inicio, Reservas, Pagos...) -->
+      <router-outlet />
+    </main>
+  </div>
+</div>

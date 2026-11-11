@@ -1,0 +1,98 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Gestión</p>
+    <h1>Planes</h1>
+    <p class="muted">Paquetes culturales y nocturnos que se ofrecen a los clientes.</p>
+  </div>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo plan</button>
+</header>
+
+<div class="toolbar toolbar-bare">
+  <label class="search">
+    <app-icon name="search" />
+    <input placeholder="Buscar planes…" [(ngModel)]="textoBusqueda" />
+  </label>
+  <span class="muted small">{{ planesFiltrados().length }} planes</span>
+</div>
+
+@if (cargando) {
+  <!-- Tres tarjetas grises mientras cargan los datos -->
+  <div class="grid-cards">
+    <div class="card skeleton-card"></div>
+    <div class="card skeleton-card"></div>
+    <div class="card skeleton-card"></div>
+  </div>
+} @else if (planesFiltrados().length === 0) {
+  <div class="card empty">
+    <app-icon name="ticket" [size]="28" />
+    <p>No hay planes para mostrar.</p>
+  </div>
+} @else {
+  <div class="grid-cards">
+    @for (plan of planesFiltrados(); track plan.id) {
+      <!-- data-tipo="CULTURAL" (o NOCTURNO / MIXTO): el CSS usa este dato para elegir el color -->
+      <article class="card plan-card" [attr.data-tipo]="plan.tipo">
+        <div class="plan-cover">
+          <!-- @switch elige el icono segun el tipo del plan (como un if con varios casos) -->
+          @switch (plan.tipo) {
+            @case ('CULTURAL') {
+              <app-icon name="landmark" [size]="26" />
+            }
+            @case ('NOCTURNO') {
+              <app-icon name="music" [size]="26" />
+            }
+            @default {
+              <app-icon name="sparkles" [size]="26" />
+            }
+          }
+          <!-- | titlecase: "CULTURAL" -> "Cultural" -->
+          <span class="chip chip-glass">{{ plan.tipo | titlecase }}</span>
+        </div>
+        <div class="plan-body">
+          <h3>{{ plan.nombre }}</h3>
+          <p class="muted">{{ plan.descripcion }}</p>
+        </div>
+        <footer class="plan-foot">
+          <div>
+            <span class="muted small">Desde</span>
+            <!-- | currency muestra el precio como dinero: 30000 -> $ 30.000 -->
+            <strong class="price">{{ plan.precio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </div>
+          <div class="actions">
+            <button class="icon-btn" title="Editar" (click)="abrirEditar(plan)"><app-icon name="edit" /></button>
+            <button class="icon-btn danger" title="Eliminar" (click)="eliminar(plan)"><app-icon name="trash" /></button>
+          </div>
+        </footer>
+      </article>
+    }
+  </div>
+}
+
+<app-modal [open]="modalAbierto" [title]="formulario.id ? 'Editar plan' : 'Nuevo plan'" (closed)="cerrarModal()">
+  <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
+    <label class="field full">
+      <span>Nombre</span>
+      <input name="nombre" [(ngModel)]="formulario.nombre" required placeholder="Ruta Candelaria" />
+    </label>
+    <label class="field">
+      <span>Tipo</span>
+      <select name="tipo" [(ngModel)]="formulario.tipo" required>
+        @for (tipo of tipos; track tipo) {
+          <option [value]="tipo">{{ tipo | titlecase }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span>Precio (COP)</span>
+      <input name="precio" type="number" min="0" step="1000" [(ngModel)]="formulario.precio" required />
+    </label>
+    <label class="field full">
+      <span>Descripción</span>
+      <textarea name="descripcion" rows="3" [(ngModel)]="formulario.descripcion" required></textarea>
+    </label>
+    <div class="modal-actions full">
+      <button type="button" class="btn btn-ghost" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="guardando || f.invalid">Guardar</button>
+    </div>
+  </form>
+</app-modal>

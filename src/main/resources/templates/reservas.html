@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reservas</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Reservas</h1>
+
+    <a th:href="@{/reservas/nuevo}">Nueva reserva</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Plan</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Número de personas</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="r : ${reservas}">
+
+                <td th:text="${r.id}"></td>
+
+                <td th:text="${r.usuario.nombreCompleto}"></td>
+
+                <td th:text="${r.plan.nombre}"></td>
+
+                <td th:text="${r.fecha}"></td>
+
+                <td th:text="${r.hora}"></td>
+
+                <td th:text="${r.numeroPersonas}"></td>
+
+                <td th:text="${r.estado}"></td>
+
+                <td>
+
+                    <a th:href="@{/reservas/editar/{id}(id=${r.id})}">
+                        Editar
+                    </a>
+
+                    |
+
+                    <a th:href="@{/reservas/eliminar/{id}(id=${r.id})}">
+                        Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

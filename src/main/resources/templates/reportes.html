@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Reportes</h1>
+
+    <a th:href="@{/}">Volver al inicio</a>
+
+    <br><br>
+
+    <ul>
+
+        <li>
+            <a th:href="@{/reportes/reservas-por-estado}">
+                Reservas por estado
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/reportes/ingresos-por-metodo}">
+                Ingresos por método de pago
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/reportes/ranking-planes}">
+                Ranking de planes más reservados
+            </a>
+        </li>
+
+    </ul>
+
+</body>
+
+</html>

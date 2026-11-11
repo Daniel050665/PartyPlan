@@ -1,0 +1,22 @@
+@if (open()) {
+  <!-- Fondo oscuro: si se hace clic aqui, se pide cerrar -->
+  <div class="overlay" (click)="avisarCierre()"></div>
+
+  <div class="modal" role="dialog" aria-modal="true" [attr.aria-label]="title()">
+    <header class="modal-head">
+      <div>
+        <h2>{{ title() }}</h2>
+        @if (subtitle()) {
+          <p class="muted small">{{ subtitle() }}</p>
+        }
+      </div>
+      <button type="button" class="icon-btn" (click)="avisarCierre()" aria-label="Cerrar">
+        <app-icon name="x" />
+      </button>
+    </header>
+    <div class="modal-body">
+      <!-- ng-content: aqui se pone lo que la pagina escribio entre <app-modal> y </app-modal> -->
+      <ng-content />
+    </div>
+  </div>
+}

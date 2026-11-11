@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Plan</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1 th:text="${plan.id == null ? 'Nuevo plan' : 'Editar plan'}"></h1>
+
+    <form th:action="@{/planes/guardar}"
+          th:object="${plan}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <label>Tipo:</label>
+
+        <input type="text"
+               th:field="*{tipo}"
+               required>
+
+        <br><br>
+
+        <label>Nombre:</label>
+
+        <input type="text"
+               th:field="*{nombre}"
+               required>
+
+        <br><br>
+
+        <label>Descripción:</label>
+
+        <textarea th:field="*{descripcion}"></textarea>
+
+        <br><br>
+
+        <label>Precio:</label>
+
+        <input type="number"
+               th:field="*{precio}"
+               step="0.01"
+               min="0"
+               required>
+
+        <br><br>
+
+        <button type="submit">Guardar</button>
+
+        <a th:href="@{/planes}">Cancelar</a>
+
+    </form>
+
+</body>
+
+</html>

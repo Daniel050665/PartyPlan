@@ -1,0 +1,299 @@
+================================================================================
+  PARTYPLAN - EVIDENCIAS DE LA SEGUNDA ENTREGA
+  Donde esta cada requisito en el codigo, como funciona y como mostrarlo
+================================================================================
+
+Rutas abreviadas:
+  F = PartyPlan-main/frontend/src/app/
+  B = PartyPlan-main/src/main/java/com/example/ProyectoWeb/
+Los numeros despues de ":" son la linea del archivo.
+
+Para la presentacion:
+  1. Abrir Docker Desktop y ejecutar:  docker compose up -d   (en PartyPlan-main)
+  2. Backend:   mvn spring-boot:run   (en PartyPlan-main)
+  3. Frontend:  npm start             (en PartyPlan-main/frontend)
+  4. Entrar a http://localhost:4200 con admin / admin123
+
+
+--------------------------------------------------------------------------------
+1. COMPONENTES ANGULAR
+--------------------------------------------------------------------------------
+Donde: F/pages/ (8 paginas + el formulario hijo), F/shared/ (icono, modal,
+       avisos, grafico de barras), F/layout/shell.component.ts (menu).
+Para que: cada parte de la pantalla es un componente con su .ts, .html y .css.
+Mostrar: la carpeta pages/ con login, dashboard, reservas, pagos, planes,
+       lugares, usuarios, reportes y usuario-form.
+
+--------------------------------------------------------------------------------
+2. ROUTING (minimo 2)  -> hay 9 rutas
+--------------------------------------------------------------------------------
+Donde: F/app.routes.ts:23 a :45   (login, inicio, reservas, pagos, planes,
+       lugares, usuarios, reportes y ** para rutas que no existen)
+       F/layout/shell.component.html -> routerLink="..." en el menu
+       y <router-outlet /> donde se dibuja la pagina actual.
+Como: cada { path, component } dice que pagina va en cada URL.
+Mostrar: hacer clic en el menu lateral y ver como cambia la URL.
+
+--------------------------------------------------------------------------------
+3. INTERPOLACION {{ }} (minimo 3)
+--------------------------------------------------------------------------------
+  F/pages/lugares.page.html:18       {{ totalElementos }} lugares
+  F/pages/lugares.page.html:48       {{ lugar.nombre }}
+  F/layout/shell.component.html:40   {{ contadorService.acciones() }}
+  F/pages/dashboard.page.html:4      {{ saludo() }}, {{ authService.obtenerUsuario() }}
+Para que: mostrar en el HTML un valor que esta en el .ts.
+
+--------------------------------------------------------------------------------
+4. PROPERTY BINDING [ ] (minimo 3)
+--------------------------------------------------------------------------------
+  F/pages/lugares.page.html:71   [disabled]="cargando || paginaActual === 0"
+  F/pages/lugares.page.html:83   [open]="modalAbierto"  [title]="..."
+  F/pages/lugares.page.html:104  [disabled]="guardando || f.invalid"
+  F/pages/usuarios.page.html     [usuario]="usuarioSeleccionado" (al hijo)
+Para que: pasar un valor del .ts a un atributo (desactivar un boton, abrir
+la ventana, enviar datos a un componente hijo).
+
+--------------------------------------------------------------------------------
+5. EVENT BINDING ( ) (minimo 3)
+--------------------------------------------------------------------------------
+  F/pages/lugares.page.html:8    (click)="abrirNuevo()"
+  F/pages/lugares.page.html:74   (click)="paginaSiguiente()"
+  F/pages/lugares.page.html:85   (ngSubmit)="guardar()"
+  F/pages/usuarios.page.html:88  (guardar)="guardarUsuario($event)"
+Para que: ejecutar una funcion cuando el usuario hace algo.
+
+--------------------------------------------------------------------------------
+6. TWO-WAY BINDING [(ngModel)] (minimo 2)
+--------------------------------------------------------------------------------
+  F/pages/login.page.html:36     [(ngModel)]="usuario"
+  F/pages/login.page.html:44     [(ngModel)]="contrasena"
+  F/pages/planes.page.html:13    [(ngModel)]="textoBusqueda"
+  F/pages/planes.page.html:75    [(ngModel)]="formulario.nombre"
+Para que: lo que se escribe en el input se guarda en la variable y al reves.
+
+--------------------------------------------------------------------------------
+7. SIGNALS: signal(), set(), update()
+--------------------------------------------------------------------------------
+Funcionalidad: CONTADOR DE ACCIONES de la sesion (crear, editar, eliminar,
+activar o cambiar estado). Se ve en el menu lateral, encima del usuario.
+  F/core/contador.service.ts:19   acciones = signal(0);
+  F/core/contador.service.ts:23   this.acciones.update((valorAnterior) => valorAnterior + 1);
+  F/core/contador.service.ts:28   this.acciones.set(0);
+  F/layout/shell.component.html:40  {{ contadorService.acciones() }}  (se muestra)
+  F/layout/shell.component.html     boton X -> contadorService.reiniciar() (set)
+  F/pages/lugares.page.ts:152 y :174 (y en las demas paginas)
+                                  this.contadorService.registrarAccion() (update)
+Mostrar: crear un lugar -> el contador sube 1 (update). Pulsar la X del
+contador -> vuelve a 0 (set). Leer el valor: acciones() con parentesis.
+
+--------------------------------------------------------------------------------
+8. CONTROL DE FLUJO: @if, @switch, @for
+--------------------------------------------------------------------------------
+  @if     F/pages/lugares.page.html:22   @if (cargando) {...} @else if {...} @else {...}
+          (muestra cargando / "no hay datos" / la tabla)
+  @for    F/pages/lugares.page.html:43   @for (lugar of lugares; track lugar.id)
+          (una fila por cada lugar)
+  @switch F/pages/planes.page.html:37    @switch (plan.tipo) { @case ('CULTURAL')
+          ... @case ('NOCTURNO') ... @default ... }
+          (elige el icono de cada tarjeta de plan segun su tipo)
+Mostrar: en Planes, cada tarjeta tiene un icono distinto (edificio, musica,
+destellos) gracias al @switch.
+
+--------------------------------------------------------------------------------
+9. COMUNICACION PADRE-HIJO: input(), output(), emit(), $event
+--------------------------------------------------------------------------------
+Funcionalidad: SELECCIONAR Y EDITAR UN USUARIO.
+  PADRE: F/pages/usuarios.page.ts / .html
+  HIJO:  F/pages/usuario-form.component.ts / .html
+Paso a paso:
+  1. En la tabla de Usuarios se pulsa el lapiz -> abrirEditar(usuario)
+     F/pages/usuarios.page.ts:121 guarda usuarioSeleccionado = usuario.
+  2. El padre se lo envia al hijo:
+     F/pages/usuarios.page.html  <app-usuario-form [usuario]="usuarioSeleccionado" ...>
+  3. input(): el hijo lo recibe
+     F/pages/usuario-form.component.ts:32  usuario = input<Usuario | null>(null);
+     y en ngOnInit llena el formulario con esos datos.
+  4. output(): el hijo declara el evento
+     F/pages/usuario-form.component.ts:36  guardar = output<Usuario>();
+  5. emit(): al pulsar Guardar el hijo envia el usuario modificado
+     F/pages/usuario-form.component.ts:113 this.guardar.emit(usuarioModificado);
+  6. $event: el padre lo recibe
+     F/pages/usuarios.page.html:88  (guardar)="guardarUsuario($event)"
+     F/pages/usuarios.page.ts:134   guardarUsuario(usuario: Usuario) -> PUT al backend
+Mostrar: Usuarios -> lapiz de un cliente -> cambiar el nombre -> Guardar ->
+la tabla se actualiza.
+(Tambien usan input()/output(): F/shared/modal.component.ts,
+ icon.component.ts y bar-list.component.ts)
+
+--------------------------------------------------------------------------------
+10. FORMULARIOS
+--------------------------------------------------------------------------------
+Formularios funcionales: lugares, planes, reservas, pagos (template-driven con
+ngModel) y usuarios (reactivo). Ej: F/pages/lugares.page.html:85
+
+--------------------------------------------------------------------------------
+11. FORMULARIOS REACTIVOS: ReactiveFormsModule, FormGroup, FormControl
+--------------------------------------------------------------------------------
+  F/pages/usuario-form.component.ts:2   import { FormControl, FormGroup, ReactiveFormsModule, Validators }
+  F/pages/usuario-form.component.ts:26  imports: [ReactiveFormsModule]
+  F/pages/usuario-form.component.ts:44  formulario = new FormGroup({
+  F/pages/usuario-form.component.ts:45  nombreCompleto: new FormControl('', {...})
+  F/pages/usuario-form.component.ts:49  correo: new FormControl(...)
+  F/pages/usuario-form.component.ts:53  telefono: new FormControl(...)
+  F/pages/usuario-form.component.html:3 <form [formGroup]="formulario" ...>
+  F/pages/usuario-form.component.html:6 <input formControlName="nombreCompleto" ...>
+
+--------------------------------------------------------------------------------
+12. VALIDACIONES (minimo 3, con mensajes) -> hay 6
+--------------------------------------------------------------------------------
+  F/pages/usuario-form.component.ts:47  Validators.required, Validators.minLength(3)
+  F/pages/usuario-form.component.ts:51  Validators.required, Validators.email
+  F/pages/usuario-form.component.ts:55  Validators.required, Validators.pattern('[0-9+ ]{7,15}')
+Mensajes: F/pages/usuario-form.component.html:10 a :36
+  "El nombre es obligatorio." / "El nombre debe tener al menos 3 letras."
+  "El correo es obligatorio." / "Escribe un correo válido..."
+  "El teléfono es obligatorio." / "Solo números, de 7 a 15 dígitos."
+Como: campoConError() solo muestra el mensaje si el campo esta mal y ya se
+toco; tieneError() dice cual regla fallo.
+Mostrar: Usuarios -> Nuevo usuario -> escribir "Al" en el nombre, "malo" en
+el correo, "12" en el telefono -> aparecen los mensajes en rojo.
+
+--------------------------------------------------------------------------------
+13. PIPES
+--------------------------------------------------------------------------------
+  F/pages/planes.page.html:59   {{ plan.precio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}  -> $ 30.000
+  F/pages/planes.page.html:49   {{ plan.tipo | titlecase }}  -> Cultural
+  F/pages/reservas.page.html    {{ reserva.fecha | date: 'EEE d MMM y' }} -> vie 30 oct 2026
+  F/pages/lugares.page.html     {{ lugar.capacidad | number }} -> 1.200
+
+--------------------------------------------------------------------------------
+14. SERVICIOS ANGULAR
+--------------------------------------------------------------------------------
+  F/core/api.service.ts  centraliza toda la comunicacion con el backend:
+    :41 get()   :46 post()   :51 put()   :56 patch()   :61 delete()
+    :66 obtenerMensajeError()
+  Otros servicios: auth.service.ts, toast.service.ts, confirm.service.ts,
+  contador.service.ts.
+
+--------------------------------------------------------------------------------
+15. INYECCION DE DEPENDENCIAS con inject()
+--------------------------------------------------------------------------------
+  F/core/api.service.ts:26      private http = inject(HttpClient);
+  F/core/api.service.ts:27      private authService = inject(AuthService);
+  F/pages/lugares.page.ts:40    private apiService = inject(ApiService);
+  (todas las paginas y servicios usan inject())
+
+--------------------------------------------------------------------------------
+16. HttpClient
+--------------------------------------------------------------------------------
+  F/app.config.ts      provideHttpClient()
+  F/core/api.service.ts:26  inject(HttpClient) y this.http.get/post/put/delete
+
+--------------------------------------------------------------------------------
+17-20. GET, POST, PUT, DELETE (2 de cada uno, con subscribe)
+--------------------------------------------------------------------------------
+  GET     F/pages/lugares.page.ts:59    apiService.get('lugares/paginado?...').subscribe
+          F/pages/usuarios.page.ts:63   apiService.get('usuarios').subscribe
+  POST    F/pages/lugares.page.ts:142   apiService.post('lugares', ...).subscribe
+          F/pages/usuarios.page.ts:143  apiService.post('usuarios', ...).subscribe
+  PUT     F/pages/lugares.page.ts:137   apiService.put('lugares/' + id, ...).subscribe
+          F/pages/usuarios.page.ts:138  apiService.put('usuarios/' + id, ...).subscribe
+  DELETE  F/pages/lugares.page.ts:171   apiService.delete('lugares/' + id).subscribe
+          F/pages/planes.page.ts:142    apiService.delete('planes/' + id).subscribe
+  (Tambien hay GET/POST/PUT/DELETE en planes, reservas y pagos.)
+Cada subscribe tiene next: (si salio bien) y error: (si fallo).
+
+--------------------------------------------------------------------------------
+21. MANEJO DE ERRORES HTTP (minimo 2 situaciones)
+--------------------------------------------------------------------------------
+  F/core/api.service.ts:66 obtenerMensajeError(error):
+    :68  401 -> sesion vencida: cierra la sesion
+    :73  0   -> "No se pudo conectar con el servidor. ¿Está corriendo el backend?"
+    :78  el backend envia { mensaje } -> se muestra ese mensaje
+  F/pages/login.page.ts:55  401 en el login -> "Usuario o contraseña incorrectos."
+Situaciones para mostrar en vivo:
+  a) Login con contraseña incorrecta -> 401 -> mensaje rojo.
+  b) Usuarios -> crear uno con el correo juan@gmail.com -> 409
+     -> "El correo electrónico ... ya está en uso por otro usuario."
+  c) Planes -> eliminar "Ruta Candelaria" (tiene reservas) -> 409
+     -> "No se puede completar la operación: el registro está relacionado..."
+  d) Apagar el backend y recargar -> status 0 -> "No se pudo conectar..."
+
+--------------------------------------------------------------------------------
+22. LOADING
+--------------------------------------------------------------------------------
+  F/pages/lugares.page.html:23   rectangulos grises (skeleton) mientras cargando = true
+  F/pages/usuario-form.component.html:46  boton "Guardando…" con spinner
+  F/pages/login.page.html:54     boton "Ingresando…" con spinner
+Como: la variable cargando/guardando es true al hacer la peticion y false
+cuando llega la respuesta (en next o en error).
+
+--------------------------------------------------------------------------------
+23. REST API CON SPRING BOOT (@RestController: 2 GET, 2 POST, 2 PUT, 2 DELETE)
+--------------------------------------------------------------------------------
+  B/Controller/lugarController.java:25   @RestController  /api/lugares
+     :33 GET  /api/lugares          :40 GET /api/lugares/paginado
+     :56 GET  /api/lugares/{id}     :66 POST /api/lugares
+     :78 PUT  /api/lugares/{id}     :89 DELETE /api/lugares/{id}
+  B/Controller/usuarioController.java  /api/usuarios
+     :30 GET  :36 GET /{id}  :46 POST  :55 PUT /{id}  :67 DELETE /{id}  :77 PATCH /{id}/activar
+  Tambien: planController, reservaController, pagoController, reporteController.
+
+--------------------------------------------------------------------------------
+24. ResponseEntity (minimo 4 endpoints, con caso exitoso y caso de error)
+--------------------------------------------------------------------------------
+  B/Controller/lugarController.java (6 endpoints) y usuarioController.java (6):
+    Exito:  :35 ResponseEntity.ok(...)                       -> 200
+            :74 ResponseEntity.status(HttpStatus.CREATED)    -> 201
+            :96 ResponseEntity.noContent().build()           -> 204
+    Error:  :47 ResponseEntity.badRequest()  pagina negativa -> 400
+            :69 ResponseEntity.badRequest()  nombre vacio    -> 400
+            :59 / :81 / :92 status(HttpStatus.NOT_FOUND) id que no existe -> 404
+  Errores generales: B/Exception/ManejadorGlobalExcepciones.java (404, 409, 400)
+Mostrar en el navegador o Postman (con usuario admin / admin123):
+  GET http://localhost:8080/api/lugares/9999     -> 404 {"mensaje":"No existe un lugar con id 9999"}
+  GET http://localhost:8080/api/lugares/1        -> 200
+
+--------------------------------------------------------------------------------
+25. PAGINACION
+--------------------------------------------------------------------------------
+Backend:
+  B/Controller/lugarController.java:40   GET /api/lugares/paginado?pagina=0&tamano=5&texto=
+  B/Services/Impl/lugarServiceImpl.java:57  PageRequest.of(pagina, tamano)
+  B/Repository/lugarRepository.java:22   consulta JPQL que devuelve Page<lugar>
+  B/DTO/PaginaRespuesta.java             { contenido, pagina, tamano, totalElementos, totalPaginas }
+  B/Config/DatosIniciales.java           agrega 6 lugares mas (9 en total = 2 paginas)
+Frontend:
+  F/pages/lugares.page.ts:56             arma la URL con pagina y tamano
+  F/pages/lugares.page.ts paginaAnterior() / :97 paginaSiguiente()
+  F/pages/lugares.page.html:68           "Página 1 de 2" + botones Anterior / Siguiente
+Mostrar: Lugares -> se ven 5 -> Siguiente -> se ven los otros 4.
+
+--------------------------------------------------------------------------------
+26. PostgreSQL
+--------------------------------------------------------------------------------
+  PartyPlan-main/src/main/resources/application.properties:4
+     spring.datasource.url=jdbc:postgresql://localhost:5432/partyplan
+  PartyPlan-main/docker-compose.yml  (crea la base en Docker)
+  pom.xml  dependencia org.postgresql:postgresql
+Mostrar: Docker Desktop -> partyplan-db -> Exec -> psql -U postgres -d partyplan -> \dt
+
+--------------------------------------------------------------------------------
+27. JPA / HIBERNATE
+--------------------------------------------------------------------------------
+  Entidades: B/Entities/ (usuario, plan, lugar, reserva, pago)
+  Relaciones: B/Entities/reserva.java:34 y :37 @ManyToOne (usuario y plan)
+              B/Entities/pago.java:34 @OneToOne (reserva)
+  Repositorios: B/Repository/ (extienden JpaRepository)
+  application.properties:10  spring.jpa.hibernate.ddl-auto=update
+
+--------------------------------------------------------------------------------
+28. JPQL (tres consultas diferentes) -> hay 4
+--------------------------------------------------------------------------------
+  1. B/Repository/reservaRepository.java:23  reservas agrupadas por estado (COUNT + GROUP BY)
+  2. B/Repository/reservaRepository.java:28  ranking de planes mas reservados (COUNT + ORDER BY)
+  3. B/Repository/pagoRepository.java:18     ingresos por metodo de pago (SUM + WHERE + GROUP BY)
+  4. B/Repository/lugarRepository.java:22    busqueda de lugares por texto (LIKE + paginacion)
+  Las 3 primeras se ven en la pagina Reportes; la 4ta en el buscador de Lugares.
+
+================================================================================

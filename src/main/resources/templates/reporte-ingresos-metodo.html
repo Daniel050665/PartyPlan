@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte: Ingresos por método de pago</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Reporte: Ingresos por método de pago</h1>
+
+    <p>Solo se incluyen los pagos con estado <strong>PAGADO</strong>.</p>
+
+    <a th:href="@{/reportes}">Volver a reportes</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>Método de pago</th>
+                <th>Total recaudado</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="item : ${reporte}">
+
+                <td th:text="${item.metodoPago}"></td>
+
+                <td th:text="${item.total}"></td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<!-- Lista de avisos (abajo a la derecha) -->
+<div class="toasts" aria-live="polite">
+  @for (aviso of toastService.toasts; track aviso.id) {
+    <!-- La clase queda "toast toast-success" o "toast toast-error" (cambia el color del icono) -->
+    <div class="toast" [class]="'toast toast-' + aviso.tipo">
+      <app-icon [name]="iconoDelAviso(aviso.tipo)" />
+      <span>{{ aviso.mensaje }}</span>
+      <button type="button" class="icon-btn sm" (click)="toastService.cerrar(aviso.id)" aria-label="Cerrar">
+        <app-icon name="x" [size]="14" />
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Ventana de confirmacion -->
+@if (confirmService.visible) {
+  <div class="overlay" (click)="confirmService.cancelar()"></div>
+  <div class="modal modal-sm" role="alertdialog" aria-modal="true">
+    <div class="modal-body confirm">
+      <span class="confirm-icon danger">
+        <app-icon name="trash" [size]="22" />
+      </span>
+      <h2>{{ confirmService.titulo }}</h2>
+      <p class="muted">{{ confirmService.mensaje }}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" (click)="confirmService.cancelar()">Cancelar</button>
+        <button type="button" class="btn btn-danger" (click)="confirmService.aceptar()">
+          {{ confirmService.textoBoton }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

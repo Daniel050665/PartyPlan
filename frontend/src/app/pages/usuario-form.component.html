@@ -1,0 +1,52 @@
+<!-- [formGroup] conecta este <form> con el FormGroup "formulario" del .ts.
+     formControlName conecta cada <input> con su FormControl. -->
+<form [formGroup]="formulario" (ngSubmit)="enviar()" class="form-grid">
+  <label class="field full">
+    <span>Nombre completo</span>
+    <input formControlName="nombreCompleto" placeholder="Juan Pérez" />
+    <!-- Mensajes de validacion: solo se ven si el campo esta mal y ya se toco -->
+    @if (campoConError('nombreCompleto')) {
+      @if (tieneError('nombreCompleto', 'required')) {
+        <small class="field-error">El nombre es obligatorio.</small>
+      } @else {
+        <small class="field-error">El nombre debe tener al menos 3 letras.</small>
+      }
+    }
+  </label>
+
+  <label class="field">
+    <span>Correo</span>
+    <input type="email" formControlName="correo" placeholder="juan@correo.com" />
+    @if (campoConError('correo')) {
+      @if (tieneError('correo', 'required')) {
+        <small class="field-error">El correo es obligatorio.</small>
+      } @else {
+        <small class="field-error">Escribe un correo válido (ej. juan@correo.com).</small>
+      }
+    }
+  </label>
+
+  <label class="field">
+    <span>Teléfono</span>
+    <input formControlName="telefono" placeholder="3001234567" />
+    @if (campoConError('telefono')) {
+      @if (tieneError('telefono', 'required')) {
+        <small class="field-error">El teléfono es obligatorio.</small>
+      } @else {
+        <small class="field-error">Solo números, de 7 a 15 dígitos.</small>
+      }
+    }
+  </label>
+
+  <div class="modal-actions full">
+    <button type="button" class="btn btn-ghost" (click)="avisarCancelar()">Cancelar</button>
+    <!-- Loading: mientras el padre espera al backend, el boton muestra un spinner -->
+    <button class="btn btn-primary" [disabled]="guardando() || formulario.invalid">
+      @if (guardando()) {
+        <span class="spinner"></span> Guardando…
+      } @else {
+        Guardar
+      }
+    </button>
+  </div>
+</form>

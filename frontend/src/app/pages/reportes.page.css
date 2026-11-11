@@ -1,0 +1,19 @@
+.grid-reportes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 860px) {
+  .grid-reportes {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: auto;
+  }
+}

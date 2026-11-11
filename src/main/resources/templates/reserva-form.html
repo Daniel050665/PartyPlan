@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reserva</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1 th:text="${reserva.id == null ? 'Nueva reserva' : 'Editar reserva'}"></h1>
+
+    <form th:action="@{/reservas/guardar}"
+          th:object="${reserva}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <label>Usuario:</label>
+
+        <select th:field="*{usuario}" required>
+
+            <option value="">Seleccione un usuario</option>
+
+            <option th:each="u : ${usuarios}"
+                    th:value="${u.id}"
+                    th:text="${u.nombreCompleto}">
+            </option>
+
+        </select>
+
+        <br><br>
+
+        <label>Plan:</label>
+
+        <select th:field="*{plan}" required>
+
+            <option value="">Seleccione un plan</option>
+
+            <option th:each="p : ${planes}"
+                    th:value="${p.id}"
+                    th:text="${p.nombre}">
+            </option>
+
+        </select>
+
+        <br><br>
+
+        <label>Fecha:</label>
+
+        <input type="date"
+               th:field="*{fecha}"
+               required>
+
+        <br><br>
+
+        <label>Hora:</label>
+
+        <input type="time"
+               th:field="*{hora}"
+               required>
+
+        <br><br>
+
+        <label>Número de personas:</label>
+
+        <input type="number"
+               th:field="*{numeroPersonas}"
+               min="1"
+               required>
+
+        <br><br>
+
+        <label>Estado:</label>
+
+        <select th:field="*{estado}">
+
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="CANCELADA">Cancelada</option>
+
+        </select>
+
+        <br><br>
+
+        <button type="submit">Guardar</button>
+
+        <a th:href="@{/reservas}">Cancelar</a>
+
+    </form>
+
+</body>
+
+</html>

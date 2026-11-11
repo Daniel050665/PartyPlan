@@ -1,0 +1,92 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Gestión</p>
+    <h1>Usuarios</h1>
+    <p class="muted">Clientes registrados que pueden realizar reservas.</p>
+  </div>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo usuario</button>
+</header>
+
+<div class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input placeholder="Buscar por nombre, correo o teléfono…" [(ngModel)]="textoBusqueda" />
+    </label>
+    <!-- Botones del filtro. El elegido lleva la clase "active" -->
+    <div class="segmented">
+      @for (opcion of opcionesFiltro; track opcion.valor) {
+        <button type="button" [class.active]="filtro === opcion.valor" (click)="cambiarFiltro(opcion.valor)">{{ opcion.etiqueta }}</button>
+      }
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="skeleton-rows"><span></span><span></span><span></span></div>
+  } @else if (usuariosFiltrados().length === 0) {
+    <div class="empty">
+      <app-icon name="users" [size]="28" />
+      <p>No hay usuarios para mostrar.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuariosFiltrados(); track usuario.id) {
+            <!-- Si el usuario esta inactivo, la fila se ve mas apagada (row-muted) -->
+            <tr [class.row-muted]="!usuario.activo">
+              <td>
+                <div class="cell-main">
+                  <span class="avatar">{{ iniciales(usuario.nombreCompleto) }}</span>
+                  <div class="stack">
+                    <strong>{{ usuario.nombreCompleto }}</strong>
+                    <span class="muted small">{{ usuario.correo }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">{{ usuario.telefono }}</td>
+              <td>
+                <!-- Verde si esta activo, gris si no -->
+                <span class="badge" [class.badge-success]="usuario.activo" [class.badge-neutral]="!usuario.activo">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="icon-btn" title="Editar" (click)="abrirEditar(usuario)"><app-icon name="edit" /></button>
+                @if (usuario.activo) {
+                  <button class="icon-btn danger" title="Desactivar" (click)="cambiarActivo(usuario)"><app-icon name="power" /></button>
+                } @else {
+                  <button class="icon-btn success" title="Activar" (click)="cambiarActivo(usuario)"><app-icon name="check" /></button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Ventana con el formulario. El formulario es un componente HIJO. -->
+<app-modal [open]="modalAbierto" [title]="usuarioSeleccionado ? 'Editar usuario' : 'Nuevo usuario'" (closed)="cerrarModal()">
+  <!-- @if crea el hijo de nuevo cada vez que se abre la ventana,
+       asi el formulario arranca con los datos del usuario seleccionado.
+       [usuario]   -> PADRE envia al HIJO el usuario seleccionado (input)
+       (guardar)   -> el HIJO devuelve el usuario modificado; llega en $event (output + emit) -->
+  @if (modalAbierto) {
+    <app-usuario-form
+      [usuario]="usuarioSeleccionado"
+      [guardando]="guardando"
+      (guardar)="guardarUsuario($event)"
+      (cancelar)="cerrarModal()"
+    />
+  }
+</app-modal>

@@ -1,0 +1,65 @@
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.plan-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.plan-cover {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 110px;
+  padding: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #db2777);
+}
+
+[data-tipo='CULTURAL'] .plan-cover {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+}
+
+[data-tipo='NOCTURNO'] .plan-cover {
+  background: linear-gradient(135deg, #7c3aed, #db2777);
+}
+
+[data-tipo='MIXTO'] .plan-cover {
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+}
+
+.plan-body {
+  flex: 1;
+  padding: 18px 18px 8px;
+}
+
+.plan-body h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.plan-body p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.plan-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 14px 18px 18px;
+}
+
+.plan-foot > div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.price {
+  font-size: 1.25rem;
+}

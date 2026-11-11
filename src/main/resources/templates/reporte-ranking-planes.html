@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte: Ranking de planes más reservados</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Reporte: Ranking de planes más reservados</h1>
+
+    <a th:href="@{/reportes}">Volver a reportes</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>Puesto</th>
+                <th>Plan</th>
+                <th>Total de reservas</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="item, iter : ${reporte}">
+
+                <td th:text="${iter.count}"></td>
+
+                <td th:text="${item.nombrePlan}"></td>
+
+                <td th:text="${item.totalReservas}"></td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

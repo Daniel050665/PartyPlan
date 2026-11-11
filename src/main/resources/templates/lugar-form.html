@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lugar</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1 th:text="${lugar.id == null ? 'Nuevo lugar' : 'Editar lugar'}"></h1>
+
+    <form th:action="@{/lugares/guardar}"
+          th:object="${lugar}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <label>Nombre:</label>
+
+        <input type="text"
+               th:field="*{nombre}"
+               required>
+
+        <br><br>
+
+        <label>Categoría:</label>
+
+        <input type="text"
+               th:field="*{categoria}"
+               required>
+
+        <br><br>
+
+        <label>Dirección:</label>
+
+        <input type="text"
+               th:field="*{direccion}"
+               required>
+
+        <br><br>
+
+        <label>Capacidad:</label>
+
+        <input type="number"
+               th:field="*{capacidad}"
+               min="1"
+               required>
+
+        <br><br>
+
+        <button type="submit">Guardar</button>
+
+        <a th:href="@{/lugares}">Cancelar</a>
+
+    </form>
+
+</body>
+
+</html>

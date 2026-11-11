@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Planes</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Planes</h1>
+
+    <a th:href="@{/planes/nuevo}">Nuevo plan</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="p : ${planes}">
+
+                <td th:text="${p.id}"></td>
+
+                <td th:text="${p.tipo}"></td>
+
+                <td th:text="${p.nombre}"></td>
+
+                <td th:text="${p.descripcion}"></td>
+
+                <td th:text="${p.precio}"></td>
+
+                <td>
+
+                    <a th:href="@{/planes/editar/{id}(id=${p.id})}">
+                        Editar
+                    </a>
+
+                    |
+
+                    <a th:href="@{/planes/eliminar/{id}(id=${p.id})}">
+                        Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

@@ -1,0 +1,267 @@
+:root {
+    --negro: #121212;
+    --negro-suave: #1a1a1a;
+    --gris: #242424;
+    --gris-claro: #bdbdbd;
+    --blanco: #f5f5f5;
+
+    --morado: #8b5cf6;
+    --morado-hover: #a78bfa;
+    --morado-oscuro: #6d28d9;
+
+    --rojo: #ef4444;
+    --verde: #22c55e;
+
+    --borde: #333333;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--negro);
+    color: var(--blanco);
+    min-height: 100vh;
+    padding: 40px;
+    line-height: 1.6;
+}
+
+h1 {
+    color: var(--blanco);
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+h2 {
+    color: var(--morado);
+    font-size: 1.6rem;
+    margin: 25px 0 15px;
+}
+
+p {
+    color: var(--gris-claro);
+    margin-bottom: 15px;
+}
+
+a {
+    color: var(--morado);
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+a:hover {
+    color: var(--morado-hover);
+    text-decoration: underline;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--borde);
+    margin: 30px 0;
+}
+
+ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    max-width: 900px;
+    margin-top: 20px;
+}
+
+li {
+    background: var(--negro-suave);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+}
+
+li:hover {
+    border-color: var(--morado);
+}
+
+li a {
+    display: block;
+    padding: 20px;
+    color: var(--blanco);
+    font-weight: bold;
+    text-align: center;
+}
+
+li a:hover {
+    color: var(--morado-hover);
+    text-decoration: none;
+}
+
+form {
+    background: var(--negro-suave);
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    padding: 30px;
+    max-width: 500px;
+    margin-top: 25px;
+}
+
+label {
+    display: block;
+    color: var(--gris-claro);
+    margin-bottom: 7px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+
+    background: #111111;
+    color: var(--blanco);
+
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+
+    outline: none;
+    font-size: 1rem;
+}
+
+input:focus {
+    border-color: var(--morado);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+button {
+    background: var(--morado);
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    padding: 12px 22px;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--morado-hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+table {
+    width: 100%;
+    max-width: 1100px;
+
+    margin-top: 25px;
+
+    border-collapse: collapse;
+
+    background: var(--negro-suave);
+
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+thead {
+    background: var(--morado-oscuro);
+}
+
+th {
+    color: white;
+    text-align: left;
+    padding: 15px;
+}
+
+td {
+    color: var(--gris-claro);
+    padding: 14px 15px;
+    border-top: 1px solid var(--borde);
+}
+
+tbody tr:hover {
+    background: var(--gris);
+}
+
+td a {
+    margin-right: 8px;
+}
+
+p[style*="color:red"] {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--rojo);
+    color: #f87171 !important;
+
+    padding: 12px 15px;
+    border-radius: 8px;
+
+    max-width: 500px;
+}
+
+p[style*="color:green"] {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid var(--verde);
+    color: #4ade80 !important;
+
+    padding: 12px 15px;
+    border-radius: 8px;
+
+    max-width: 500px;
+}
+
+strong {
+    color: var(--morado-hover);
+}
+
+form a {
+    display: inline-block;
+    margin-left: 15px;
+    padding: 11px 18px;
+
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+
+    color: var(--gris-claro);
+
+    transition: 0.2s ease;
+}
+
+form a:hover {
+    border-color: var(--morado);
+    color: var(--morado-hover);
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+
+    body {
+        padding: 25px 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    ul {
+        grid-template-columns: 1fr;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    form {
+        padding: 20px;
+    }
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">    
+</head>
+
+<body>
+
+    <h1>Usuarios</h1>
+
+    <a th:href="@{/usuarios/nuevo}">Nuevo usuario</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Nombre completo</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <tr th:each="u : ${usuarios}">
+
+                <td th:text="${u.id}"></td>
+
+                <td th:text="${u.nombreCompleto}"></td>
+
+                <td th:text="${u.correo}"></td>
+
+                <td th:text="${u.telefono}"></td>
+
+                <td th:text="${u.activo ? 'Activo' : 'Inactivo'}"></td>
+
+                <td>
+
+                    <a th:href="@{/usuarios/editar/{id}(id=${u.id})}">
+                        Editar
+                    </a>
+
+                    |
+
+                    <a th:if="${u.activo}"
+                       th:href="@{/usuarios/eliminar/{id}(id=${u.id})}">
+                        Desactivar
+                    </a>
+
+                    <a th:unless="${u.activo}"
+                       th:href="@{/usuarios/activar/{id}(id=${u.id})}">
+                        Activar
+                    </a>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

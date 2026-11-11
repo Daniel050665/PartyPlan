@@ -1,0 +1,61 @@
+<div class="login">
+  <!-- Parte izquierda: portada decorativa -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="brand">
+      <span class="brand-mark"><app-icon name="moon" [size]="20" /></span>
+      <span>Party<b>Plan</b></span>
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow">Bogotá · Cultura y vida nocturna</p>
+      <h1>Diseña experiencias inolvidables en la ciudad.</h1>
+      <p>Gestiona planes, lugares, reservas y pagos desde un solo panel.</p>
+    </div>
+    <ul class="hero-tags">
+      <li><app-icon name="landmark" [size]="16" /> Museos</li>
+      <li><app-icon name="music" [size]="16" /> Discotecas</li>
+      <li><app-icon name="sparkles" [size]="16" /> Experiencias</li>
+    </ul>
+  </section>
+
+  <!-- Parte derecha: formulario -->
+  <section class="panel">
+    <!-- #f="ngForm" le pone el nombre "f" al formulario.
+         f.invalid es true si algun campo obligatorio (required) esta vacio. -->
+    <form class="login-card" (ngSubmit)="entrar()" #f="ngForm">
+      <h2>Bienvenido de nuevo</h2>
+      <p class="muted">Ingresa con tu cuenta de administrador.</p>
+
+      <!-- El recuadro rojo solo aparece si hay un mensaje de error -->
+      @if (error) {
+        <div class="alert">{{ error }}</div>
+      }
+
+      <label class="field">
+        <span>Usuario</span>
+        <input name="usuario" [(ngModel)]="usuario" required autocomplete="username" placeholder="admin" />
+      </label>
+
+      <label class="field">
+        <span>Contraseña</span>
+        <input
+          name="contrasena"
+          type="password"
+          [(ngModel)]="contrasena"
+          required
+          autocomplete="current-password"
+          placeholder="••••••••"
+        />
+      </label>
+
+      <!-- El boton se desactiva mientras carga o si falta algun campo -->
+      <button class="btn btn-primary btn-block" [disabled]="cargando || f.invalid">
+        @if (cargando) {
+          <span class="spinner"></span> Ingresando…
+        } @else {
+          Iniciar sesión <app-icon name="arrow" />
+        }
+      </button>
+    </form>
+  </section>
+</div>

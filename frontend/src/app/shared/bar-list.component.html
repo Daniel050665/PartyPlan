@@ -1,0 +1,24 @@
+@if (items().length === 0) {
+  <p class="muted small vacio">Sin datos todavía.</p>
+}
+<ul>
+  <!-- $index es la posicion de la barra en la lista (empieza en 0) -->
+  @for (barra of items(); track barra.etiqueta; let posicion = $index) {
+    <li>
+      <div class="fila">
+        <span class="etiqueta">
+          @if (ranking()) {
+            <span class="pos">{{ posicion + 1 }}</span>
+          }
+          {{ barra.etiqueta }}
+        </span>
+        <strong>{{ textoDeLaBarra(barra) }}</strong>
+      </div>
+      <div class="pista">
+        <!-- [style.width.%] pone el ancho en porcentaje. Ej: width: 50%
+             [style.background] pone el color; si la barra no trae color, se queda el morado del CSS -->
+        <div class="barra" [style.width.%]="calcularAncho(barra.valor)" [style.background]="barra.color"></div>
+      </div>
+    </li>
+  }
+</ul>

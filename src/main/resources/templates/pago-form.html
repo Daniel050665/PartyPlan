@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pago</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1 th:text="${pago.id == null ? 'Nuevo pago' : 'Editar pago'}"></h1>
+
+    <form th:action="@{/pagos/guardar}"
+          th:object="${pago}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <label>Reserva:</label>
+
+        <select th:field="*{reserva}" required>
+
+            <option value="">Seleccione una reserva</option>
+
+            <option th:each="r : ${reservas}"
+                    th:value="${r.id}"
+                    th:text="${'Reserva #' + r.id}">
+            </option>
+
+        </select>
+
+        <br><br>
+
+        <label>Monto:</label>
+
+        <input type="number"
+               th:field="*{monto}"
+               step="0.01"
+               min="0"
+               required>
+
+        <br><br>
+
+        <label>Método de pago:</label>
+
+        <select th:field="*{metodoPago}" required>
+
+            <option value="">Seleccione un método</option>
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+
+        </select>
+
+        <br><br>
+
+        <label>Fecha de pago:</label>
+
+        <input type="date"
+               th:field="*{fechaPago}"
+               required>
+
+        <br><br>
+
+        <label>Estado del pago:</label>
+
+        <select th:field="*{estadoPago}">
+
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="PAGADO">Pagado</option>
+            <option value="RECHAZADO">Rechazado</option>
+
+        </select>
+
+        <br><br>
+
+        <button type="submit">Guardar</button>
+
+        <a th:href="@{/pagos}">Cancelar</a>
+
+    </form>
+
+</body>
+
+</html>

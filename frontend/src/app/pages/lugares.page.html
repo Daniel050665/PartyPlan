@@ -1,0 +1,107 @@
+<!-- Titulo de la pagina y boton para crear -->
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Gestión</p>
+    <h1>Lugares</h1>
+    <p class="muted">Museos, bares, discotecas y recintos que forman parte de los planes.</p>
+  </div>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo lugar</button>
+</header>
+
+<div class="card">
+  <!-- Buscador: cada vez que cambia el texto se llama a buscar() con lo escrito ($event) -->
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input placeholder="Buscar por nombre, categoría o dirección…" [ngModel]="textoBusqueda" (ngModelChange)="buscar($event)" />
+    </label>
+    <span class="muted small">{{ totalElementos }} lugares</span>
+  </div>
+
+  <!-- Tres casos: cargando / no hay datos / tabla -->
+  @if (cargando) {
+    <div class="skeleton-rows"><span></span><span></span><span></span></div>
+  } @else if (lugares.length === 0) {
+    <div class="empty">
+      <app-icon name="pin" [size]="28" />
+      <p>No hay lugares para mostrar.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Lugar</th>
+            <th>Categoría</th>
+            <th>Dirección</th>
+            <th class="num">Capacidad</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Una fila por cada lugar -->
+          @for (lugar of lugares; track lugar.id) {
+            <tr>
+              <td>
+                <div class="cell-main">
+                  <span class="thumb"><app-icon name="pin" /></span>
+                  <strong>{{ lugar.nombre }}</strong>
+                </div>
+              </td>
+              <td><span class="chip">{{ lugar.categoria }}</span></td>
+              <td class="muted">{{ lugar.direccion }}</td>
+              <!-- | number pone el punto de miles: 1200 -> 1.200 -->
+              <td class="num">{{ lugar.capacidad | number }} <span class="muted small">pers.</span></td>
+              <td class="actions">
+                <button class="icon-btn" title="Editar" (click)="abrirEditar(lugar)"><app-icon name="edit" /></button>
+                <button class="icon-btn danger" title="Eliminar" (click)="eliminar(lugar)"><app-icon name="trash" /></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Paginacion: botones para cambiar de pagina -->
+  @if (totalPaginas > 1) {
+    <div class="paginacion">
+      <span class="muted small">Página {{ paginaActual + 1 }} de {{ totalPaginas }}</span>
+      <div class="paginacion-botones">
+        <button type="button" class="btn btn-ghost" (click)="paginaAnterior()" [disabled]="cargando || paginaActual === 0">
+          Anterior
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="paginaSiguiente()" [disabled]="cargando || paginaActual + 1 >= totalPaginas">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Ventana con el formulario -->
+<app-modal [open]="modalAbierto" [title]="formulario.id ? 'Editar lugar' : 'Nuevo lugar'" (closed)="cerrarModal()">
+  <!-- #f="ngForm": nombre del formulario. f.invalid = true si algun campo no cumple sus reglas -->
+  <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
+    <label class="field full">
+      <span>Nombre</span>
+      <input name="nombre" [(ngModel)]="formulario.nombre" required placeholder="Museo del Oro" />
+    </label>
+    <label class="field">
+      <span>Categoría</span>
+      <input name="categoria" [(ngModel)]="formulario.categoria" required placeholder="Museo, Bar, Discoteca…" />
+    </label>
+    <label class="field">
+      <span>Capacidad</span>
+      <input name="capacidad" type="number" min="1" [(ngModel)]="formulario.capacidad" required />
+    </label>
+    <label class="field full">
+      <span>Dirección</span>
+      <input name="direccion" [(ngModel)]="formulario.direccion" required placeholder="Cra. 6 #15-88" />
+    </label>
+    <div class="modal-actions full">
+      <button type="button" class="btn btn-ghost" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="guardando || f.invalid">Guardar</button>
+    </div>
+  </form>
+</app-modal>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lugares</title>
+    <link rel="stylesheet" th:href="@{/styles.css}">
+</head>
+
+<body>
+
+    <h1>Lugares</h1>
+
+    <a th:href="@{/lugares/nuevo}">Nuevo lugar</a>
+
+    <br><br>
+
+    <table border="1">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Dirección</th>
+                <th>Capacidad</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="l : ${lugares}">
+
+                <td th:text="${l.id}"></td>
+
+                <td th:text="${l.nombre}"></td>
+
+                <td th:text="${l.categoria}"></td>
+
+                <td th:text="${l.direccion}"></td>
+
+                <td th:text="${l.capacidad}"></td>
+
+                <td>
+
+                    <a th:href="@{/lugares/editar/{id}(id=${l.id})}">
+                        Editar
+                    </a>
+
+                    |
+
+                    <a th:href="@{/lugares/eliminar/{id}(id=${l.id})}">
+                        Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</body>
+
+</html>

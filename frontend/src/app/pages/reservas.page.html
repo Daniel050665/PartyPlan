@@ -1,0 +1,150 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Gestión</p>
+    <h1>Reservas</h1>
+    <p class="muted">Consulta, crea y aprueba las reservas de los clientes.</p>
+  </div>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nueva reserva</button>
+</header>
+
+<!-- Pildoras de estado: al hacer clic filtran la tabla -->
+<div class="stat-row">
+  @for (estado of estados; track estado) {
+    <button type="button" class="stat-pill" [class.active]="filtroEstado === estado" (click)="alternarFiltro(estado)">
+      <!-- El punto de color: dot-pendiente (amarillo), dot-confirmada (verde), dot-cancelada (rojo) -->
+      <span class="dot" [class]="'dot dot-' + estado.toLowerCase()"></span>
+      {{ estado | titlecase }}
+      <strong>{{ contarPorEstado(estado) }}</strong>
+    </button>
+  }
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input placeholder="Buscar por cliente o plan…" [(ngModel)]="textoBusqueda" />
+    </label>
+    <span class="muted small">{{ reservasFiltradas().length }} reservas</span>
+  </div>
+
+  @if (cargando) {
+    <div class="skeleton-rows"><span></span><span></span><span></span></div>
+  } @else if (reservasFiltradas().length === 0) {
+    <div class="empty">
+      <app-icon name="calendar" [size]="28" />
+      <p>No hay reservas para mostrar.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Plan</th>
+            <th>Fecha</th>
+            <th class="num">Personas</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (reserva of reservasFiltradas(); track reserva.id) {
+            <tr>
+              <td class="muted">#{{ reserva.id }}</td>
+              <td>
+                <div class="cell-main">
+                  <span class="avatar sm">{{ iniciales(reserva.usuario?.nombreCompleto) }}</span>
+                  <!-- ?. evita un error si la reserva no trae usuario -->
+                  <strong>{{ reserva.usuario?.nombreCompleto }}</strong>
+                </div>
+              </td>
+              <td>{{ reserva.plan?.nombre }}</td>
+              <td>
+                <div class="stack">
+                  <!-- | date con 'EEE d MMM y' muestra: "vie 30 oct 2026" -->
+                  <span>{{ reserva.fecha | date: 'EEE d MMM y' }}</span>
+                  <span class="muted small">{{ horaCorta(reserva.hora) }} h</span>
+                </div>
+              </td>
+              <td class="num">{{ reserva.numeroPersonas }}</td>
+              <td>
+                <!-- Selector de estado dentro de la tabla.
+                     [ngModel] muestra el estado actual.
+                     (ngModelChange) se ejecuta cuando el usuario elige otro; $event es el estado nuevo. -->
+                <select
+                  class="badge-select"
+                  [class]="'badge-select badge-' + reserva.estado.toLowerCase()"
+                  [ngModel]="reserva.estado"
+                  (ngModelChange)="cambiarEstado(reserva, $event)"
+                  aria-label="Cambiar estado"
+                >
+                  @for (estado of estados; track estado) {
+                    <option [value]="estado">{{ estado | titlecase }}</option>
+                  }
+                </select>
+              </td>
+              <td class="actions">
+                <button class="icon-btn" title="Editar" (click)="abrirEditar(reserva)"><app-icon name="edit" /></button>
+                <button class="icon-btn danger" title="Eliminar" (click)="eliminar(reserva)"><app-icon name="trash" /></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-modal
+  [open]="modalAbierto"
+  [title]="formulario.id ? 'Editar reserva #' + formulario.id : 'Nueva reserva'"
+  (closed)="cerrarModal()"
+>
+  <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
+    <label class="field full">
+      <span>Cliente</span>
+      <!-- [ngValue] guarda el id como NUMERO (con [value] se guardaria como texto) -->
+      <select name="usuarioId" [(ngModel)]="formulario.usuarioId" required>
+        <option [ngValue]="null" disabled>Selecciona un cliente</option>
+        @for (usuario of usuariosActivos(); track usuario.id) {
+          <option [ngValue]="usuario.id">{{ usuario.nombreCompleto }} · {{ usuario.correo }}</option>
+        }
+      </select>
+    </label>
+    <label class="field full">
+      <span>Plan</span>
+      <select name="planId" [(ngModel)]="formulario.planId" required>
+        <option [ngValue]="null" disabled>Selecciona un plan</option>
+        @for (plan of planes; track plan.id) {
+          <option [ngValue]="plan.id">{{ plan.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span>Fecha</span>
+      <input name="fecha" type="date" [(ngModel)]="formulario.fecha" required />
+    </label>
+    <label class="field">
+      <span>Hora</span>
+      <input name="hora" type="time" [(ngModel)]="formulario.hora" required />
+    </label>
+    <label class="field">
+      <span>Número de personas</span>
+      <input name="numeroPersonas" type="number" min="1" [(ngModel)]="formulario.numeroPersonas" required />
+    </label>
+    <label class="field">
+      <span>Estado</span>
+      <select name="estado" [(ngModel)]="formulario.estado" required>
+        @for (estado of estados; track estado) {
+          <option [value]="estado">{{ estado | titlecase }}</option>
+        }
+      </select>
+    </label>
+    <div class="modal-actions full">
+      <button type="button" class="btn btn-ghost" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="guardando || f.invalid">Guardar</button>
+    </div>
+  </form>
+</app-modal>
