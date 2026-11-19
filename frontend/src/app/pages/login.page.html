@@ -24,7 +24,7 @@
          f.invalid es true si algun campo obligatorio (required) esta vacio. -->
     <form class="login-card" (ngSubmit)="entrar()" #f="ngForm">
       <h2>Bienvenido de nuevo</h2>
-      <p class="muted">Ingresa con tu cuenta de administrador.</p>
+      <p class="muted">Ingresa como administrador o como cliente.</p>
 
       <!-- El recuadro rojo solo aparece si hay un mensaje de error -->
       @if (error) {

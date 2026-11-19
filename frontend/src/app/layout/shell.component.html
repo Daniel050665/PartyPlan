@@ -2,29 +2,32 @@
 <div class="shell" [class.menu-abierto]="menuAbierto">
   <aside class="sidebar">
     <!-- Logo -->
-    <a class="brand" routerLink="/" (click)="cerrarMenu()">
+    <a class="brand" [routerLink]="authService.rutaDeInicio()" (click)="cerrarMenu()">
       <span class="brand-mark"><app-icon name="moon" [size]="18" /></span>
       <span class="brand-text">Party<b>Plan</b></span>
     </a>
 
     <nav class="nav">
-      <span class="nav-label">General</span>
-      @for (opcion of opcionesGenerales; track opcion.ruta) {
-        <!-- routerLinkActive="active": si estamos en esa pagina, el enlace se pinta resaltado.
-             exact: true solo para Inicio ('/'), porque todas las rutas empiezan por '/' -->
-        <a
-          [routerLink]="opcion.ruta"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: opcion.ruta === '/' }"
-          (click)="cerrarMenu()"
-        >
-          <app-icon [name]="opcion.icono" />
-          <span>{{ opcion.etiqueta }}</span>
-        </a>
+      <!-- El grupo "General" (Inicio y Reportes) solo lo ve el ADMIN -->
+      @if (authService.esAdmin()) {
+        <span class="nav-label">General</span>
+        @for (opcion of opcionesGenerales; track opcion.ruta) {
+          <!-- routerLinkActive="active": si estamos en esa pagina, el enlace se pinta resaltado.
+               exact: true solo para Inicio ('/'), porque todas las rutas empiezan por '/' -->
+          <a
+            [routerLink]="opcion.ruta"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: opcion.ruta === '/' }"
+            (click)="cerrarMenu()"
+          >
+            <app-icon [name]="opcion.icono" />
+            <span>{{ opcion.etiqueta }}</span>
+          </a>
+        }
       }
 
       <span class="nav-label">Gestión</span>
-      @for (opcion of opcionesGestion; track opcion.ruta) {
+      @for (opcion of opcionesVisibles(); track opcion.ruta) {
         <a [routerLink]="opcion.ruta" routerLinkActive="active" (click)="cerrarMenu()">
           <app-icon [name]="opcion.icono" />
           <span>{{ opcion.etiqueta }}</span>
@@ -50,7 +53,7 @@
         <span class="avatar">{{ inicialDelUsuario() }}</span>
         <div class="user-info">
           <strong>{{ authService.obtenerUsuario() }}</strong>
-          <span>Administrador</span>
+          <span>{{ nombreDelRol() }}</span>
         </div>
       </div>
       <button type="button" class="icon-btn" (click)="cerrarSesion()" title="Cerrar sesión" aria-label="Cerrar sesión">

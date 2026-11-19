@@ -2,6 +2,8 @@ import { DatePipe, TitleCasePipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+import { AuthService } from '../core/auth.service';
+import { BotonPagarComponent } from '../pagos/boton-pagar.component';
 import { ContadorService } from '../core/contador.service';
 import { ConfirmService } from '../core/confirm.service';
 import { ESTADOS_RESERVA, Plan, Reserva, Usuario } from '../core/models';
@@ -34,7 +36,7 @@ interface FormularioReserva {
 
 @Component({
   selector: 'app-reservas',
-  imports: [FormsModule, DatePipe, TitleCasePipe, IconComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, TitleCasePipe, IconComponent, ModalComponent, BotonPagarComponent],
   templateUrl: './reservas.page.html',
 })
 export class ReservasPage implements OnInit {
@@ -58,10 +60,14 @@ export class ReservasPage implements OnInit {
   private toastService = inject(ToastService);
   private contadorService = inject(ContadorService);
   private confirmService = inject(ConfirmService);
+  authService = inject(AuthService); // para saber si es ADMIN o USER
 
   ngOnInit(): void {
     this.cargarReservas();
-    this.cargarUsuarios();
+    // La lista de clientes solo la necesita (y la puede pedir) el ADMIN
+    if (this.authService.esAdmin()) {
+      this.cargarUsuarios();
+    }
     this.cargarPlanes();
   }
 
@@ -93,6 +99,14 @@ export class ReservasPage implements OnInit {
         this.planes = datos;
       },
     });
+  }
+
+  // Precio del plan de la reserva (para el boton de pagar)
+  precioDe(reserva: Reserva): number | null {
+    if (reserva.plan) {
+      return reserva.plan.precio;
+    }
+    return null;
   }
 
   iniciales(nombre: string | undefined): string {

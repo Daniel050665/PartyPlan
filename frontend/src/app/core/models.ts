@@ -70,5 +70,5 @@ export interface PlanRankingReporte {
 // Listas de opciones para los <select> de los formularios
 export const ESTADOS_RESERVA = ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'];
 export const ESTADOS_PAGO = ['PENDIENTE', 'PAGADO', 'RECHAZADO'];
-export const METODOS_PAGO = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'];
+export const METODOS_PAGO = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'WOMPI'];
 export const TIPOS_PLAN = ['CULTURAL', 'NOCTURNO', 'MIXTO'];

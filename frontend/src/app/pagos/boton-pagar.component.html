@@ -1,0 +1,9 @@
+<!-- Boton pequeno para la tabla de reservas -->
+<button type="button" class="btn btn-primary btn-pagar" (click)="pagar()" [disabled]="cargando" title="Pagar con Wompi">
+  @if (cargando) {
+    <span class="spinner"></span> Redirigiendo…
+  } @else {
+    <app-icon name="card" [size]="15" />
+    Pagar {{ monto() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+  }
+</button>

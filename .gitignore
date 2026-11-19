@@ -17,3 +17,6 @@ Thumbs.db
 # ===== Logs y variables de entorno =====
 *.log
 .env
+
+# ===== Secretos (llaves de Wompi) =====
+secretos.properties

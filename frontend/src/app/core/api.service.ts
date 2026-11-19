@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 // =====================================================================
@@ -19,8 +20,9 @@ import { AuthService } from './auth.service';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   // Todas las direcciones del backend empiezan por /api.
-  // El archivo proxy.conf.json reenvia /api al puerto 8080 (Spring Boot).
-  private urlBase = '/api/';
+  // environment.apiUrl vacio = backend local (proxy.conf.json lo reenvia al puerto 8080).
+  // Si el backend esta en Render, environment.apiUrl tiene su direccion.
+  private urlBase = environment.apiUrl + '/api/';
 
   // inject() le pide a Angular el servicio que necesitamos (inyeccion de dependencias)
   private http = inject(HttpClient);
@@ -67,6 +69,11 @@ export class ApiService {
     // 401 = el backend ya no acepta nuestras credenciales: cerramos la sesion.
     if (error.status === 401 && this.authService.estaLogueado()) {
       this.authService.cerrarSesion();
+    }
+
+    // 403 = inicio sesion bien, pero su rol no tiene permiso
+    if (error.status === 403 && !(error.error && error.error.mensaje)) {
+      return 'No tienes permisos para realizar esta operación.';
     }
 
     // status 0 = el backend no respondio (esta apagado o no hay conexion)

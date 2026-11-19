@@ -18,6 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.ProyectoWeb.Entities.reserva;
 import com.example.ProyectoWeb.Services.reservaService;
+import com.example.ProyectoWeb.Services.usuarioService;
+import com.example.ProyectoWeb.Config.Roles;
+import com.example.ProyectoWeb.Entities.usuario;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -26,23 +31,53 @@ public class reservaController {
     @Autowired
     private reservaService service;
 
+    @Autowired
+    private usuarioService usuarioService;
+
+    // GET /api/reservas  (USER y ADMIN)
+    // AUTORIZACION REAL POR ROL: el ADMIN ve todas las reservas;
+    // un USER solo ve las reservas de su propio cliente (su correo).
     @GetMapping
-    public List<reserva> listar() {
-        return service.obtenerTodas();
+    public List<reserva> listar(Authentication authentication) {
+        if (Roles.esAdmin(authentication)) {
+            return service.obtenerTodas();
+        }
+        usuario cliente = usuarioService.obtenerPorCorreo(authentication.getName());
+        return service.obtenerPorUsuario(cliente.getId());
     }
 
+    // GET /api/reservas/{id}  (USER y ADMIN): un USER no puede ver reservas ajenas -> 403
     @GetMapping("/{id}")
-    public reserva obtener(@PathVariable Long id) {
-        return service.obtenerPorId(id);
+    public ResponseEntity<?> obtener(@PathVariable Long id, Authentication authentication) {
+        reserva encontrada = service.obtenerPorId(id);
+        if (!Roles.esAdmin(authentication) && !esDueno(encontrada, authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("mensaje", "No tienes permisos para ver esta reserva."));
+        }
+        return ResponseEntity.ok(encontrada);
     }
 
+    // POST /api/reservas  (USER y ADMIN)
+    // Si la crea un USER, el backend la asigna a SU cliente y la deja PENDIENTE,
+    // sin importar lo que venga en el JSON.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public reserva crear(@RequestBody reserva reserva) {
+    public reserva crear(@RequestBody reserva reserva, Authentication authentication) {
         reserva.setId(null);
+        if (!Roles.esAdmin(authentication)) {
+            reserva.setUsuario(usuarioService.obtenerPorCorreo(authentication.getName()));
+            reserva.setEstado("PENDIENTE");
+        }
         return service.crear(reserva);
     }
 
+    // La reserva es del usuario que inicio sesion si el correo del cliente coincide
+    private boolean esDueno(reserva reserva, Authentication authentication) {
+        return reserva.getUsuario() != null
+                && authentication.getName().equals(reserva.getUsuario().getCorreo());
+    }
+
+    // PUT, PATCH y DELETE de reservas: SOLO ADMIN (lo controla SecurityConfig)
     @PutMapping("/{id}")
     public reserva actualizar(@PathVariable Long id, @RequestBody reserva reserva) {
         service.obtenerPorId(id);

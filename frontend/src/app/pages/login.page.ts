@@ -45,10 +45,11 @@ export class LoginPage {
     //   error -> si algo fallo
     this.authService.verificarCredenciales(token).subscribe({
       next: (respuesta) => {
-        // respuesta = { usuario: "admin" }
-        this.authService.guardarSesion(token, respuesta.usuario);
+        // respuesta = { usuario: "admin", rol: "ADMIN" }
+        this.authService.guardarSesion(token, respuesta.usuario, respuesta.rol);
         this.cargando = false;
-        this.router.navigate(['/']); // vamos al inicio
+        // El admin va al panel; un cliente (USER) va a sus reservas
+        this.router.navigate([this.authService.rutaDeInicio()]);
       },
       error: (error) => {
         // 401 = usuario o contrasena incorrectos

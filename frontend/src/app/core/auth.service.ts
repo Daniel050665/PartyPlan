@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // =====================================================================
 // SERVICIO DE AUTENTICACION
@@ -24,16 +25,41 @@ export class AuthService {
   }
 
   // Pregunta al backend si el usuario y la contrasena son correctos.
-  // Si son correctos responde { usuario: "admin" }; si no, responde error 401.
+  // Si son correctos responde { usuario: "admin", rol: "ADMIN" }; si no, responde error 401.
   verificarCredenciales(token: string): Observable<any> {
     const opciones = { headers: { Authorization: 'Basic ' + token } };
-    return this.http.get('/api/auth/me', opciones);
+    return this.http.get(environment.apiUrl + '/api/auth/me', opciones);
   }
 
-  // Guarda la sesion en el navegador
-  guardarSesion(token: string, usuario: string): void {
+  // Guarda la sesion en el navegador (rol = 'ADMIN' o 'USER')
+  guardarSesion(token: string, usuario: string, rol: string): void {
     sessionStorage.setItem('partyplan.token', token);
     sessionStorage.setItem('partyplan.usuario', usuario);
+    sessionStorage.setItem('partyplan.rol', rol);
+  }
+
+  // Rol de quien inicio sesion: 'ADMIN' o 'USER'
+  obtenerRol(): string {
+    const rol = sessionStorage.getItem('partyplan.rol');
+    if (rol === null) {
+      return '';
+    }
+    return rol;
+  }
+
+  // true si es administrador.
+  // OJO: esto solo sirve para MOSTRAR u OCULTAR opciones en pantalla.
+  // La seguridad de verdad la hace el backend (SecurityConfig).
+  esAdmin(): boolean {
+    return this.obtenerRol() === 'ADMIN';
+  }
+
+  // Pagina de inicio segun el rol: el admin va al panel, un cliente a sus reservas
+  rutaDeInicio(): string {
+    if (this.esAdmin()) {
+      return '/';
+    }
+    return '/reservas';
   }
 
   // Devuelve el token guardado, o null si nadie ha iniciado sesion
@@ -63,6 +89,7 @@ export class AuthService {
   cerrarSesion(): void {
     sessionStorage.removeItem('partyplan.token');
     sessionStorage.removeItem('partyplan.usuario');
+    sessionStorage.removeItem('partyplan.rol');
     this.router.navigate(['/login']);
   }
 }

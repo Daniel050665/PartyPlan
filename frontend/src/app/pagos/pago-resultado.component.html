@@ -1,0 +1,44 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Pagos con Wompi</p>
+    <h1>Resultado del pago</h1>
+  </div>
+</header>
+
+<div class="card resultado">
+  <!-- @switch muestra un contenido distinto segun como termino el pago -->
+  @switch (situacion) {
+    @case ('confirmando') {
+      <span class="resultado-icono"><span class="spinner grande"></span></span>
+      <h2>Estamos confirmando tu pago…</h2>
+      <p class="muted">Esto toma unos segundos. No cierres esta página.</p>
+    }
+    @case ('esperando') {
+      <span class="resultado-icono"><span class="spinner grande"></span></span>
+      <h2>Completa el pago en la pestaña de Wompi</h2>
+      <p class="muted">Cuando termines, esta página se actualizará sola.</p>
+    }
+    @case ('aprobado') {
+      <span class="resultado-icono exito"><app-icon name="check" [size]="30" /></span>
+      <h2>¡Pago aprobado!</h2>
+      <p class="muted">
+        Tu reserva de <strong>{{ resultado?.plan }}</strong> quedó confirmada.
+        Pagaste {{ resultado?.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}.
+      </p>
+      <p class="muted small">Referencia: {{ resultado?.referencia }}</p>
+    }
+    @case ('rechazado') {
+      <span class="resultado-icono fallo"><app-icon name="x" [size]="30" /></span>
+      <h2>El pago no se pudo completar</h2>
+      <p class="muted">Wompi rechazó la transacción. Puedes intentarlo de nuevo con otra tarjeta.</p>
+      <p class="muted small">Referencia: {{ resultado?.referencia }}</p>
+    }
+    @default {
+      <span class="resultado-icono fallo"><app-icon name="x" [size]="30" /></span>
+      <h2>No pudimos confirmar el pago</h2>
+      <p class="muted">{{ mensajeError }}</p>
+    }
+  }
+
+  <a routerLink="/reservas" class="btn btn-ghost">Volver a mis reservas</a>
+</div>

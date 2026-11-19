@@ -1,0 +1,289 @@
+================================================================================
+  PARTYPLAN - EVIDENCIAS DE LA ENTREGA FINAL
+  Parte 1: Spring Security (rubrica)    Parte 2: Pagos con Wompi    Parte 3: Render
+================================================================================
+
+Rutas abreviadas:
+  B = PartyPlan-main/src/main/java/com/example/ProyectoWeb/
+  F = PartyPlan-main/frontend/src/app/
+Los numeros despues de ":" son la linea del archivo.
+
+USUARIOS DE PRUEBA (en memoria)
+  Usuario            Contrasena   Rol     Que puede hacer
+  -----------------  -----------  ------  ---------------------------------------
+  admin              admin123     ADMIN   Todo: panel, pagos, usuarios, reportes,
+                                          crear/editar/eliminar planes y lugares
+  juan@gmail.com     juan123      USER    Ver planes y lugares, ver y crear SUS
+                                          reservas, pagarlas con Wompi
+  maria@gmail.com    maria123     USER    Lo mismo que juan (con sus reservas)
+
+Para arrancar:
+  1. Abrir Docker Desktop. En PartyPlan-main:  docker compose up -d
+  2. Backend (en PartyPlan-main):              mvn spring-boot:run
+  3. Frontend (en PartyPlan-main/frontend):    npm start
+  4. Abrir http://localhost:4200
+
+
+################################################################################
+PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
+################################################################################
+
+--------------------------------------------------------------------------------
+1. SPRING SECURITY + SecurityConfig
+--------------------------------------------------------------------------------
+  pom.xml:43                      spring-boot-starter-security
+  B/Config/SecurityConfig.java:57 @EnableWebSecurity
+  Arriba del archivo hay un resumen comentado de usuarios y permisos.
+
+--------------------------------------------------------------------------------
+2. USUARIOS (minimo 3: 2 normales y 1 administrador)
+--------------------------------------------------------------------------------
+  B/Config/SecurityConfig.java:74   admin           -> .roles("ADMIN")  (:76)
+  B/Config/SecurityConfig.java:82   juan@gmail.com  -> .roles("USER")   (:84)
+  B/Config/SecurityConfig.java:88   maria@gmail.com -> .roles("USER")   (:90)
+  B/Config/SecurityConfig.java:93   return new InMemoryUserDetailsManager(admin, juan, maria);
+  Los USER usan como nombre el correo de su cliente (tabla usuarios). Asi el
+  backend sabe cuales reservas son de cada uno.
+
+--------------------------------------------------------------------------------
+3. ROLES (USER y ADMIN, con permisos diferentes)
+--------------------------------------------------------------------------------
+  Ver la tabla "USUARIOS DE PRUEBA" arriba y las reglas del punto 6.
+
+--------------------------------------------------------------------------------
+4. AUTENTICACION: inicio y cierre de sesion
+--------------------------------------------------------------------------------
+  Inicio de sesion:
+    F/pages/login.page.ts           entrar(): crea el token y lo verifica
+    F/core/auth.service.ts:22       crearToken(): btoa("usuario:contrasena")
+    F/core/auth.service.ts:29       verificarCredenciales(): GET /api/auth/me
+    B/Controller/InicioController.java:20  GET /api/auth/me -> { usuario, rol }
+    F/core/auth.service.ts:35       guardarSesion(): token, usuario y rol en sessionStorage
+  Cierre de sesion:
+    Boton de salir abajo en el menu lateral -> F/core/auth.service.ts:89 cerrarSesion()
+    Borra el token de sessionStorage y vuelve a /login. Desde ese momento el
+    navegador ya no envia credenciales y el backend responde 401.
+    (Con HTTP Basic sin sesion, el servidor no guarda nada que haya que borrar.)
+
+--------------------------------------------------------------------------------
+5. CONTRASENAS CON BCrypt
+--------------------------------------------------------------------------------
+  B/Config/SecurityConfig.java:66   return new BCryptPasswordEncoder();
+  Cada usuario se crea con passwordEncoder.encode("..."): en memoria queda el
+  hash ($2a$10$...), nunca la contrasena en texto plano.
+
+--------------------------------------------------------------------------------
+6. ENDPOINTS PROTEGIDOS (publico / USER y ADMIN / solo ADMIN)
+--------------------------------------------------------------------------------
+  Reglas en B/Config/SecurityConfig.java:106 a :122 (la primera que coincide gana)
+
+  PUBLICO (sin iniciar sesion):
+    :109  GET  /api/publico/**     -> B/Controller/PublicoController.java:30 (catalogo de planes)
+    :110  POST /api/pagos/webhook  -> aviso de Wompi (se valida con firma, no con usuario)
+  USER y ADMIN:
+    :113  /api/auth/**             -> quien inicio sesion
+    :114  GET /api/planes/**, GET /api/lugares/**
+    :115  GET /api/reservas/**
+    :116  POST /api/reservas
+    :117  /api/pagos/wompi/**      -> pagar con Wompi
+  SOLO ADMIN:
+    :120  todo lo demas de /api/** -> ej. DELETE /api/planes/1, GET /api/usuarios,
+          GET /api/reportes/..., POST /api/lugares, PUT/DELETE /api/reservas/...
+
+--------------------------------------------------------------------------------
+7. AUTORIZACION EN UNA FUNCIONALIDAD REAL
+--------------------------------------------------------------------------------
+  Reservas: el ADMIN ve todas; un USER solo ve y crea las suyas.
+    B/Controller/reservaController.java:42  if (Roles.esAdmin(...)) -> todas
+    B/Controller/reservaController.java:45  si no, solo las de su cliente (por su correo)
+    B/Controller/reservaController.java:53  GET /{id} de otro cliente -> 403
+    B/Controller/reservaController.java:67  POST de un USER: se asigna a SU cliente y queda PENDIENTE
+  Pagos Wompi: un USER solo puede pagar sus reservas (403 si no):
+    B/pagos/WompiCheckoutController.java  crearCheckout()
+  Gestion (planes, lugares, usuarios, pagos, reportes): solo ADMIN (regla :120).
+
+--------------------------------------------------------------------------------
+8. INTEGRACION CON ANGULAR (login y opciones segun el rol)
+--------------------------------------------------------------------------------
+  Pantalla de login:  F/pages/login.page.ts / .html
+    :52  despues de entrar: ADMIN -> panel (/), USER -> sus reservas (/reservas)
+  Menu segun el rol:  F/layout/shell.component.ts  opcionesVisibles() y nombreDelRol()
+    ADMIN ve: Inicio, Reportes, Reservas, Pagos, Planes, Lugares, Usuarios
+    USER ve:  Reservas, Planes, Lugares   (y debajo de su nombre dice "Cliente")
+  Botones segun el rol:
+    F/pages/planes.page.html:8 y :64     Nuevo / editar / eliminar plan: solo ADMIN
+    F/pages/lugares.page.html:9 y :59    Nuevo / editar / eliminar lugar: solo ADMIN
+    F/pages/reservas.page.html:5         titulo "Mis reservas" para USER
+    F/pages/reservas.page.html:80        USER ve el estado; ADMIN lo puede cambiar
+    F/pages/reservas.page.html:105       editar y eliminar reservas: solo ADMIN
+  Paginas segun el rol (guards):
+    F/core/auth.guard.ts:32   adminGuard: si un USER escribe /usuarios en la barra,
+                              muestra "No tienes permisos para ver esa página."
+    F/app.routes.ts:48 a :51  Inicio, Pagos, Usuarios y Reportes llevan adminGuard
+
+  IMPORTANTE: ocultar botones es solo visual. La seguridad real esta en el
+  backend: si un USER llama directamente a DELETE /api/planes/1 recibe 403.
+
+--------------------------------------------------------------------------------
+9. MANEJO DE ERRORES (credenciales incorrectas y falta de permisos)
+--------------------------------------------------------------------------------
+  Backend:
+    B/Config/SecurityConfig.java:134  401 -> {"mensaje":"Credenciales inválidas o sesión expirada."}
+    B/Config/SecurityConfig.java:144  403 -> {"mensaje":"No tienes permisos para realizar esta operación."}
+  Frontend:
+    F/pages/login.page.ts:56   401 en el login -> "Usuario o contraseña incorrectos."
+    F/core/api.service.ts      obtenerMensajeError(): muestra el mensaje del backend
+                               (403 -> "No tienes permisos para realizar esta operación.")
+    F/core/auth.guard.ts:32    pagina de ADMIN abierta por un USER -> aviso rojo
+
+--------------------------------------------------------------------------------
+10. PRUEBAS DE SEGURIDAD (4 situaciones)
+--------------------------------------------------------------------------------
+Se pueden mostrar en el navegador o con curl en PowerShell (curl.exe).
+
+  a) ACCESO A UN ENDPOINT PUBLICO (sin iniciar sesion)
+     Navegador: abrir http://localhost:8080/api/publico/planes
+     curl.exe -i http://localhost:8080/api/publico/planes
+     Resultado: 200 con el catalogo de planes.
+     (Comparar: curl.exe -i http://localhost:8080/api/planes  -> 401)
+
+  b) INICIO DE SESION CORRECTO
+     App: entrar con juan@gmail.com / juan123 -> llega a "Mis reservas".
+     curl.exe -i -u juan@gmail.com:juan123 http://localhost:8080/api/auth/me
+     Resultado: 200 {"usuario":"juan@gmail.com","rol":"USER"}
+
+  c) CREDENCIALES INCORRECTAS
+     App: entrar con juan@gmail.com / malaclave -> "Usuario o contraseña incorrectos."
+     curl.exe -i -u juan@gmail.com:malaclave http://localhost:8080/api/auth/me
+     Resultado: 401 {"mensaje":"Credenciales inválidas o sesión expirada."}
+
+  d) ACCESO DENEGADO POR FALTA DE PERMISOS
+     curl.exe -i -u juan@gmail.com:juan123 -X DELETE http://localhost:8080/api/planes/1
+     curl.exe -i -u juan@gmail.com:juan123 http://localhost:8080/api/usuarios
+     Resultado: 403 {"mensaje":"No tienes permisos para realizar esta operación."}
+     App: como juan, escribir en la barra http://localhost:4200/usuarios
+          -> aviso rojo "No tienes permisos para ver esa página."
+     Extra: juan no ve las reservas de maria (GET /api/reservas solo devuelve las suyas).
+
+--------------------------------------------------------------------------------
+12. EVIDENCIA DE AUTENTICACION EN CHROME DEVTOOLS
+--------------------------------------------------------------------------------
+Mecanismo usado: HTTP BASIC, SIN SESION (no usamos JWT ni cookies).
+
+  Network (F12 -> Network -> Fetch/XHR):
+    1. Iniciar sesion y abrir cualquier pantalla (ej. Planes).
+    2. Clic en la peticion "planes" -> Headers -> Request Headers.
+    3. Se ve:  Authorization: Basic anVhbkBnbWFpbC5jb206********
+       "Basic" + usuario:contrasena codificado en Base64. Base64 NO es cifrado:
+       cualquiera puede decodificarlo, por eso en produccion se usa HTTPS.
+       (En la sustentacion, ocultar el valor: no mostrar la cabecera completa.)
+    4. La respuesta NO trae Set-Cookie: el servidor no crea sesion (STATELESS,
+       B/Config/SecurityConfig.java:103). Por eso el navegador debe enviar la
+       cabecera Authorization en CADA peticion.
+  Application (F12 -> Application -> Session Storage -> http://localhost:4200):
+    partyplan.token    = el valor Base64 (ocultarlo en la sustentacion)
+    partyplan.usuario  = juan@gmail.com
+    partyplan.rol      = USER
+    Lo guarda F/core/auth.service.ts:35. sessionStorage se borra al cerrar la
+    pestana. Al cerrar sesion se borran los 3 valores.
+  Quien agrega la cabecera: F/core/api.service.ts:33 crearOpciones() en cada peticion.
+  Como lo valida el backend: Spring Security lee la cabecera, decodifica el
+  Base64, busca el usuario en InMemoryUserDetailsManager y compara la
+  contrasena con BCrypt. Si no coincide -> 401. Si coincide pero el rol no
+  alcanza -> 403.
+
+
+################################################################################
+PARTE 2. PAGOS CON WOMPI (laboratorio)
+################################################################################
+
+COMO FUNCIONA
+  1. En "Mis reservas", una reserva PENDIENTE tiene el boton "Pagar $..."
+     (F/pagos/boton-pagar.component.ts).
+  2. Angular llama POST /api/pagos/wompi/checkout con { reservaId }.
+     El backend calcula el monto con el precio del plan (el navegador NO
+     decide el precio), crea la orden PENDING y devuelve el link firmado.
+  3. El usuario paga en la pagina de Wompi (Sandbox, dinero de mentira).
+  4. Wompi avisa al webhook POST /api/pagos/webhook (si el backend esta en Render)
+     y devuelve al usuario a /pago/resultado?id=TRANSACCION.
+  5. La pagina de resultado pregunta al backend; el backend consulta a Wompi,
+     actualiza la orden y, si fue APPROVED: la reserva pasa a CONFIRMADA y se
+     registra el pago como PAGADO con metodo WOMPI.
+
+ARCHIVOS
+  Backend (B/pagos/):
+    Orden.java                    tabla "ordenes": referencia, monto en centavos, estado
+    OrdenRepository.java          guardar y buscar ordenes
+    WompiService.java:94          firmaIntegridad(): SHA-256(referencia+centavos+moneda+secreto)
+    WompiService.java:99          urlDePago(): link de Web Checkout
+    WompiService.java:121         eventoEsValido(): comprueba la firma del webhook
+    WompiService.java:163         consultarTransaccion(): pregunta a Wompi
+    WompiService.java:178         actualizarOrden(): guarda el resultado y confirma la reserva
+    WompiCheckoutController.java  POST checkout, GET transaccion/{id}, GET orden/{referencia}
+                                  (se llama asi porque ya existia un pagoController)
+    WompiWebhookController.java   POST /api/pagos/webhook (publico, valida la firma)
+  Frontend (F/pagos/):
+    pago.service.ts               habla con el backend
+    boton-pagar.component.ts      boton "Pagar con Wompi" (recibe la reserva con input())
+    pago-resultado.component.ts   pagina /pago/resultado (usa @switch para el resultado)
+  Configuracion:
+    application.properties        wompi.* lee las llaves de variables de entorno
+    secretos.properties.ejemplo   plantilla para tus llaves en tu computador
+
+PASOS QUE DEBES HACER TU (solo tu puedes crear la cuenta de Wompi)
+  1. Crear la cuenta en wompi.co y dejar el interruptor en Sandbox.
+  2. Copiar las 4 llaves (comercios.wompi.co -> Desarrollo -> Desarrolladores).
+     Todas deben decir "test".
+  3. En PartyPlan-main, copiar secretos.properties.ejemplo como secretos.properties
+     y pegar las llaves. Este archivo esta en .gitignore: NO se sube a GitHub.
+  4. Reiniciar el backend. Sin llaves, el boton muestra
+     "Los pagos con Wompi no están configurados...".
+
+TARJETAS DE PRUEBA (Sandbox)
+  4242 4242 4242 4242  -> Aprobada
+  4111 1111 1111 1111  -> Rechazada
+  Fecha: cualquiera en el futuro. CVC: 3 numeros. Nombre: cualquiera.
+
+  DIFERENCIA ENTRE TU COMPUTADOR Y RENDER
+  Wompi NO acepta devolver al usuario a una direccion localhost o 127.0.0.1
+  (responde 403 "Request blocked"). Por eso:
+  - Frontend en tu computador: Wompi se abre en OTRA pestana. La pestana de
+    PartyPlan muestra "Completa el pago en la pestaña de Wompi" y cada 3 s
+    pregunta GET /api/pagos/wompi/orden/{referencia}. El backend consulta a
+    Wompi por la referencia usando la LLAVE PRIVADA (por eso es necesaria).
+    (B/pagos/WompiService.java: puedeVolverAutomaticamente() y consultarPorReferencia())
+  - Frontend publicado (https): Wompi devuelve al usuario a
+    /pago/resultado?id=TRANSACCION en la misma pestana, y ademas llega el
+    webhook (registrarlo en Wompi, ver Parte 3).
+  Si el navegador bloquea la pestana nueva, Wompi se abre en la misma pestana.
+
+
+################################################################################
+PARTE 3. DESPLIEGUE EN RENDER (laboratorio)
+################################################################################
+  Dockerfile (en PartyPlan-main)  compila con Maven y ejecuta el .jar (Java 17)
+  .dockerignore                   no copia frontend, target ni secretos
+  application.properties          server.port=${PORT:8080} y server.address=0.0.0.0
+
+  En Render:
+  1. New -> Postgres (plan gratis). Copiar los datos de conexion INTERNA.
+  2. New -> Web Service -> repositorio GitHub Daniel050665/PartyPlan, rama main,
+     Language: Docker, Dockerfile Path: ./Dockerfile
+  3. Environment (variables):
+       SPRING_DATASOURCE_URL       jdbc:postgresql://HOST_INTERNO:5432/BASE
+       SPRING_DATASOURCE_USERNAME  usuario de Render
+       SPRING_DATASOURCE_PASSWORD  contrasena de Render
+       WOMPI_PUBLIC_KEY            pub_test_...
+       WOMPI_PRIVATE_KEY           prv_test_...
+       WOMPI_INTEGRITY_KEY         test_integrity_...
+       WOMPI_EVENTS_SECRET         test_events_...
+       FRONTEND_URL                http://localhost:4200 (o la URL de tu Angular)
+     Las tablas se crean solas (spring.jpa.hibernate.ddl-auto=update).
+  4. En Wompi (Sandbox) -> URL de eventos:
+       https://TU-BACKEND.onrender.com/api/pagos/webhook
+  5. En Angular, frontend/src/environments/environment.ts:
+       apiUrl: 'https://TU-BACKEND.onrender.com'
+  6. Verificar en F12 -> Network que la Request URL apunta a Render y que la
+     respuesta trae los encabezados x-render-origin-server y rndr-id.
+
+================================================================================

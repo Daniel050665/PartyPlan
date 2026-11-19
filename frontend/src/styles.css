@@ -927,6 +927,14 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 }
 
+/* ---------- Boton Pagar con Wompi (en la tabla) ---------- */
+.btn-pagar {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  gap: 6px;
+}
+
 /* ---------- Paginacion ---------- */
 /* margin-top compensa el margen negativo de .table-wrap */
 .paginacion {

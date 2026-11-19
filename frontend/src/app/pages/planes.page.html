@@ -4,7 +4,10 @@
     <h1>Planes</h1>
     <p class="muted">Paquetes culturales y nocturnos que se ofrecen a los clientes.</p>
   </div>
-  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo plan</button>
+  <!-- Solo el ADMIN puede crear planes (el backend tambien lo bloquea con 403) -->
+  @if (authService.esAdmin()) {
+    <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo plan</button>
+  }
 </header>
 
 <div class="toolbar toolbar-bare">
@@ -58,10 +61,12 @@
             <!-- | currency muestra el precio como dinero: 30000 -> $ 30.000 -->
             <strong class="price">{{ plan.precio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
           </div>
-          <div class="actions">
-            <button class="icon-btn" title="Editar" (click)="abrirEditar(plan)"><app-icon name="edit" /></button>
-            <button class="icon-btn danger" title="Eliminar" (click)="eliminar(plan)"><app-icon name="trash" /></button>
-          </div>
+          @if (authService.esAdmin()) {
+            <div class="actions">
+              <button class="icon-btn" title="Editar" (click)="abrirEditar(plan)"><app-icon name="edit" /></button>
+              <button class="icon-btn danger" title="Eliminar" (click)="eliminar(plan)"><app-icon name="trash" /></button>
+            </div>
+          }
         </footer>
       </article>
     }

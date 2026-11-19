@@ -27,7 +27,7 @@ export class ShellComponent {
   // En celular el menu esta escondido. true = el menu esta abierto.
   menuAbierto = false;
 
-  // Opciones del grupo "General" del menu
+  // Opciones del grupo "General" del menu (solo ADMIN)
   opcionesGenerales: OpcionMenu[] = [
     { ruta: '/', etiqueta: 'Inicio', icono: 'dashboard' },
     { ruta: '/reportes', etiqueta: 'Reportes', icono: 'chart' },
@@ -45,6 +45,30 @@ export class ShellComponent {
   // inject() le pide a Angular el servicio que necesitamos (inyeccion de dependencias)
   authService = inject(AuthService);
   contadorService = inject(ContadorService); // el contador de acciones (signal)
+
+  // Opciones de "Gestion" que se ven segun el rol.
+  // Un cliente (USER) solo ve Reservas, Planes y Lugares.
+  // (Ocultar opciones es solo visual: el backend igual bloquea con 403.)
+  opcionesVisibles(): OpcionMenu[] {
+    if (this.authService.esAdmin()) {
+      return this.opcionesGestion;
+    }
+    const resultado: OpcionMenu[] = [];
+    for (const opcion of this.opcionesGestion) {
+      if (opcion.ruta === '/reservas' || opcion.ruta === '/planes' || opcion.ruta === '/lugares') {
+        resultado.push(opcion);
+      }
+    }
+    return resultado;
+  }
+
+  // Texto debajo del nombre en el menu
+  nombreDelRol(): string {
+    if (this.authService.esAdmin()) {
+      return 'Administrador';
+    }
+    return 'Cliente';
+  }
 
   abrirMenu(): void {
     this.menuAbierto = true;

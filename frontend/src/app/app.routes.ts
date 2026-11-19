@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { authGuard, invitadoGuard } from './core/auth.guard';
+import { adminGuard, authGuard, inicioGuard, invitadoGuard } from './core/auth.guard';
 import { ShellComponent } from './layout/shell.component';
+import { PagoResultadoComponent } from './pagos/pago-resultado.component';
 import { DashboardPage } from './pages/dashboard.page';
 import { LoginPage } from './pages/login.page';
 import { LugaresPage } from './pages/lugares.page';
@@ -16,6 +17,10 @@ import { UsuariosPage } from './pages/usuarios.page';
 //   component = la pagina que se muestra
 //   title     = el texto de la pestana del navegador
 //   canActivate = el "portero" que decide si se puede entrar
+//
+// Paginas por rol:
+//   ADMIN: todas.
+//   USER:  Reservas (las suyas), Planes, Lugares y el resultado del pago.
 // =====================================================================
 
 export const routes: Routes = [
@@ -32,13 +37,18 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', title: 'Inicio · PartyPlan', component: DashboardPage },
+      // USER y ADMIN
       { path: 'reservas', title: 'Reservas · PartyPlan', component: ReservasPage },
-      { path: 'pagos', title: 'Pagos · PartyPlan', component: PagosPage },
       { path: 'planes', title: 'Planes · PartyPlan', component: PlanesPage },
       { path: 'lugares', title: 'Lugares · PartyPlan', component: LugaresPage },
-      { path: 'usuarios', title: 'Usuarios · PartyPlan', component: UsuariosPage },
-      { path: 'reportes', title: 'Reportes · PartyPlan', component: ReportesPage },
+      // A esta pagina vuelve el usuario despues de pagar en Wompi
+      { path: 'pago/resultado', title: 'Resultado del pago · PartyPlan', component: PagoResultadoComponent },
+
+      // Solo ADMIN
+      { path: '', title: 'Inicio · PartyPlan', component: DashboardPage, canActivate: [inicioGuard] },
+      { path: 'pagos', title: 'Pagos · PartyPlan', component: PagosPage, canActivate: [adminGuard] },
+      { path: 'usuarios', title: 'Usuarios · PartyPlan', component: UsuariosPage, canActivate: [adminGuard] },
+      { path: 'reportes', title: 'Reportes · PartyPlan', component: ReportesPage, canActivate: [adminGuard] },
     ],
   },
   // Cualquier otra direccion que no exista nos manda al inicio

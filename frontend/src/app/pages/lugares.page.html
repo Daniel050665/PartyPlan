@@ -5,7 +5,10 @@
     <h1>Lugares</h1>
     <p class="muted">Museos, bares, discotecas y recintos que forman parte de los planes.</p>
   </div>
-  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo lugar</button>
+  <!-- Solo el ADMIN puede crear lugares (el backend tambien lo bloquea con 403) -->
+  @if (authService.esAdmin()) {
+    <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo lugar</button>
+  }
 </header>
 
 <div class="card">
@@ -53,8 +56,10 @@
               <!-- | number pone el punto de miles: 1200 -> 1.200 -->
               <td class="num">{{ lugar.capacidad | number }} <span class="muted small">pers.</span></td>
               <td class="actions">
-                <button class="icon-btn" title="Editar" (click)="abrirEditar(lugar)"><app-icon name="edit" /></button>
-                <button class="icon-btn danger" title="Eliminar" (click)="eliminar(lugar)"><app-icon name="trash" /></button>
+                @if (authService.esAdmin()) {
+                  <button class="icon-btn" title="Editar" (click)="abrirEditar(lugar)"><app-icon name="edit" /></button>
+                  <button class="icon-btn danger" title="Eliminar" (click)="eliminar(lugar)"><app-icon name="trash" /></button>
+                }
               </td>
             </tr>
           }

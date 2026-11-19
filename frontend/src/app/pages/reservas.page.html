@@ -1,8 +1,14 @@
 <header class="page-head">
   <div>
     <p class="eyebrow">Gestión</p>
-    <h1>Reservas</h1>
-    <p class="muted">Consulta, crea y aprueba las reservas de los clientes.</p>
+    <!-- El titulo cambia segun el rol: el ADMIN ve todas; un cliente (USER) solo las suyas -->
+    @if (authService.esAdmin()) {
+      <h1>Reservas</h1>
+      <p class="muted">Consulta, crea y aprueba las reservas de los clientes.</p>
+    } @else {
+      <h1>Mis reservas</h1>
+      <p class="muted">Reserva un plan y págalo en línea con Wompi.</p>
+    }
   </div>
   <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nueva reserva</button>
 </header>
@@ -70,24 +76,36 @@
               </td>
               <td class="num">{{ reserva.numeroPersonas }}</td>
               <td>
-                <!-- Selector de estado dentro de la tabla.
-                     [ngModel] muestra el estado actual.
-                     (ngModelChange) se ejecuta cuando el usuario elige otro; $event es el estado nuevo. -->
-                <select
-                  class="badge-select"
-                  [class]="'badge-select badge-' + reserva.estado.toLowerCase()"
-                  [ngModel]="reserva.estado"
-                  (ngModelChange)="cambiarEstado(reserva, $event)"
-                  aria-label="Cambiar estado"
-                >
-                  @for (estado of estados; track estado) {
-                    <option [value]="estado">{{ estado | titlecase }}</option>
-                  }
-                </select>
+                <!-- Un cliente (USER) solo VE el estado; el ADMIN lo puede cambiar -->
+                @if (!authService.esAdmin()) {
+                  <span [class]="'badge badge-' + reserva.estado.toLowerCase()">{{ reserva.estado | titlecase }}</span>
+                } @else {
+                  <!-- Selector de estado dentro de la tabla.
+                       [ngModel] muestra el estado actual.
+                       (ngModelChange) se ejecuta cuando el usuario elige otro; $event es el estado nuevo. -->
+                  <select
+                    class="badge-select"
+                    [class]="'badge-select badge-' + reserva.estado.toLowerCase()"
+                    [ngModel]="reserva.estado"
+                    (ngModelChange)="cambiarEstado(reserva, $event)"
+                    aria-label="Cambiar estado"
+                  >
+                    @for (estado of estados; track estado) {
+                      <option [value]="estado">{{ estado | titlecase }}</option>
+                    }
+                  </select>
+                }
               </td>
               <td class="actions">
-                <button class="icon-btn" title="Editar" (click)="abrirEditar(reserva)"><app-icon name="edit" /></button>
-                <button class="icon-btn danger" title="Eliminar" (click)="eliminar(reserva)"><app-icon name="trash" /></button>
+                <!-- Pagar con Wompi: solo si la reserva sigue PENDIENTE (componente hijo con input()) -->
+                @if (reserva.estado === 'PENDIENTE' && reserva.id) {
+                  <app-boton-pagar [reservaId]="reserva.id" [monto]="precioDe(reserva)" />
+                }
+                <!-- Editar y eliminar: solo ADMIN (el backend tambien lo bloquea con 403) -->
+                @if (authService.esAdmin()) {
+                  <button class="icon-btn" title="Editar" (click)="abrirEditar(reserva)"><app-icon name="edit" /></button>
+                  <button class="icon-btn danger" title="Eliminar" (click)="eliminar(reserva)"><app-icon name="trash" /></button>
+                }
               </td>
             </tr>
           }
@@ -103,16 +121,19 @@
   (closed)="cerrarModal()"
 >
   <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
-    <label class="field full">
-      <span>Cliente</span>
-      <!-- [ngValue] guarda el id como NUMERO (con [value] se guardaria como texto) -->
-      <select name="usuarioId" [(ngModel)]="formulario.usuarioId" required>
-        <option [ngValue]="null" disabled>Selecciona un cliente</option>
-        @for (usuario of usuariosActivos(); track usuario.id) {
-          <option [ngValue]="usuario.id">{{ usuario.nombreCompleto }} · {{ usuario.correo }}</option>
-        }
-      </select>
-    </label>
+    <!-- El ADMIN elige el cliente. Si la crea un USER, el backend la asigna a su propio cliente. -->
+    @if (authService.esAdmin()) {
+      <label class="field full">
+        <span>Cliente</span>
+        <!-- [ngValue] guarda el id como NUMERO (con [value] se guardaria como texto) -->
+        <select name="usuarioId" [(ngModel)]="formulario.usuarioId" required>
+          <option [ngValue]="null" disabled>Selecciona un cliente</option>
+          @for (usuario of usuariosActivos(); track usuario.id) {
+            <option [ngValue]="usuario.id">{{ usuario.nombreCompleto }} · {{ usuario.correo }}</option>
+          }
+        </select>
+      </label>
+    }
     <label class="field full">
       <span>Plan</span>
       <select name="planId" [(ngModel)]="formulario.planId" required>
@@ -134,14 +155,17 @@
       <span>Número de personas</span>
       <input name="numeroPersonas" type="number" min="1" [(ngModel)]="formulario.numeroPersonas" required />
     </label>
-    <label class="field">
-      <span>Estado</span>
-      <select name="estado" [(ngModel)]="formulario.estado" required>
-        @for (estado of estados; track estado) {
-          <option [value]="estado">{{ estado | titlecase }}</option>
-        }
-      </select>
-    </label>
+    <!-- Solo el ADMIN elige el estado; las reservas de un cliente empiezan PENDIENTE -->
+    @if (authService.esAdmin()) {
+      <label class="field">
+        <span>Estado</span>
+        <select name="estado" [(ngModel)]="formulario.estado" required>
+          @for (estado of estados; track estado) {
+            <option [value]="estado">{{ estado | titlecase }}</option>
+          }
+        </select>
+      </label>
+    }
     <div class="modal-actions full">
       <button type="button" class="btn btn-ghost" (click)="cerrarModal()">Cancelar</button>
       <button class="btn btn-primary" [disabled]="guardando || f.invalid">Guardar</button>

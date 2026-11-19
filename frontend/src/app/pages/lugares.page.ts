@@ -2,6 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
+import { AuthService } from '../core/auth.service';
 import { ContadorService } from '../core/contador.service';
 import { ConfirmService } from '../core/confirm.service';
 import { Lugar } from '../core/models';
@@ -38,6 +39,7 @@ export class LugaresPage implements OnInit {
 
   // inject() le pide a Angular el servicio que necesitamos (inyeccion de dependencias)
   private apiService = inject(ApiService);
+  authService = inject(AuthService); // para saber si es ADMIN (mostrar u ocultar botones)
   private toastService = inject(ToastService);
   private contadorService = inject(ContadorService);
   private confirmService = inject(ConfirmService);
