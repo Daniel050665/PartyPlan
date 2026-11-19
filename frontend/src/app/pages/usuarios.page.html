@@ -1,10 +1,10 @@
 <header class="page-head">
   <div>
     <p class="eyebrow">Gestión</p>
-    <h1>Usuarios</h1>
-    <p class="muted">Clientes registrados que pueden realizar reservas.</p>
+    <h1>Clientes</h1>
+    <p class="muted">Personas con cuenta en PartyPlan. Cada cliente hace y paga sus propias reservas.</p>
   </div>
-  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo usuario</button>
+  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nuevo cliente</button>
 </header>
 
 <div class="card">
@@ -26,14 +26,14 @@
   } @else if (usuariosFiltrados().length === 0) {
     <div class="empty">
       <app-icon name="users" [size]="28" />
-      <p>No hay usuarios para mostrar.</p>
+      <p>No hay clientes para mostrar.</p>
     </div>
   } @else {
     <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
-            <th>Usuario</th>
+            <th>Cliente</th>
             <th>Teléfono</th>
             <th>Estado</th>
             <th></th>
@@ -76,7 +76,7 @@
 </div>
 
 <!-- Ventana con el formulario. El formulario es un componente HIJO. -->
-<app-modal [open]="modalAbierto" [title]="usuarioSeleccionado ? 'Editar usuario' : 'Nuevo usuario'" (closed)="cerrarModal()">
+<app-modal [open]="modalAbierto" [title]="usuarioSeleccionado ? 'Editar cliente' : 'Nuevo cliente'" (closed)="cerrarModal()">
   <!-- @if crea el hijo de nuevo cada vez que se abre la ventana,
        asi el formulario arranca con los datos del usuario seleccionado.
        [usuario]   -> PADRE envia al HIJO el usuario seleccionado (input)

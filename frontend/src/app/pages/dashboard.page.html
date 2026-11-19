@@ -5,7 +5,8 @@
     <h1>Tu noche en Bogotá, bajo control.</h1>
     <p class="muted">Resumen en tiempo real de reservas, pagos y experiencias.</p>
   </div>
-  <a routerLink="/reservas" class="btn btn-primary"><app-icon name="plus" /> Nueva reserva</a>
+  <!-- El administrador no crea reservas (las hacen los clientes): las revisa y aprueba -->
+  <a routerLink="/reservas" class="btn btn-primary"><app-icon name="calendar" /> Ver reservas</a>
 </section>
 
 <!-- 4 tarjetas con numeros. Cada una es un enlace a su pagina -->
@@ -26,7 +27,7 @@
       <span class="kpi-sub">pagos confirmados</span>
     </div>
   </a>
-  <a class="kpi" routerLink="/usuarios">
+  <a class="kpi" routerLink="/clientes">
     <span class="kpi-icon info"><app-icon name="users" /></span>
     <div>
       <span class="muted small">Clientes activos</span>

@@ -1,6 +1,6 @@
 package com.example.ProyectoWeb.Entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,11 +38,11 @@ public class usuario {
     @Builder.Default
     private boolean activo = true;
 
-    // Contrasena cifrada con BCrypt (ej. $2a$10$...). Solo la tienen los clientes
-    // que se registraron en la app; los creados por el admin la tienen en null.
-    // @JsonIgnore: NUNCA se envia en las respuestas JSON.
+    // Contrasena del cliente, guardada cifrada con BCrypt (ej. $2a$10$...).
+    // WRITE_ONLY: se puede RECIBIR en un JSON (cuando el admin crea un cliente),
+    // pero NUNCA se envia en las respuestas.
     // @ToString.Exclude: tampoco aparece si se imprime el objeto en consola.
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ToString.Exclude
     private String contrasena;
 }

@@ -39,7 +39,7 @@ export class ShellComponent {
     { ruta: '/pagos', etiqueta: 'Pagos', icono: 'card' },
     { ruta: '/planes', etiqueta: 'Planes', icono: 'ticket' },
     { ruta: '/lugares', etiqueta: 'Lugares', icono: 'pin' },
-    { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'users' },
+    { ruta: '/clientes', etiqueta: 'Clientes', icono: 'users' },
   ];
 
   // inject() le pide a Angular el servicio que necesitamos (inyeccion de dependencias)

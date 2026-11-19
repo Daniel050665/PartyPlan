@@ -12,6 +12,7 @@ export interface Usuario {
   correo: string;
   telefono: string;
   activo?: boolean;
+  contrasena?: string; // solo se ENVIA al crear un cliente; el backend nunca la devuelve
 }
 
 export interface Plan {

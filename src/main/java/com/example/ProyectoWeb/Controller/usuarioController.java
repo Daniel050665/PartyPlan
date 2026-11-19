@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,6 +27,9 @@ public class usuarioController {
     @Autowired
     private usuarioService service;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // GET /api/usuarios -> 200 con la lista
     @GetMapping
     public ResponseEntity<List<usuario>> listar() {
@@ -41,12 +45,18 @@ public class usuarioController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    // POST /api/usuarios -> 201 con el usuario creado
-    // (si el correo ya existe, el servicio lanza CorreoDuplicadoException -> 409)
+    // POST /api/usuarios -> 201 con el cliente creado (SOLO ADMIN)
+    // Todo cliente necesita contrasena para poder iniciar sesion y hacer sus reservas.
+    // 400 si falta la contrasena; 409 si el correo ya existe (CorreoDuplicadoException).
     @PostMapping
-    public ResponseEntity<usuario> crear(@RequestBody usuario usuario) {
+    public ResponseEntity<?> crear(@RequestBody usuario usuario) {
+        if (usuario.getContrasena() == null || usuario.getContrasena().length() < 6) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("mensaje", "La contraseña del cliente debe tener al menos 6 caracteres."));
+        }
         usuario.setId(null);
         usuario.setActivo(true);
+        usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena())); // se guarda cifrada (BCrypt)
         usuario creado = service.guardar(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }

@@ -57,17 +57,16 @@ public class reservaController {
         return ResponseEntity.ok(encontrada);
     }
 
-    // POST /api/reservas  (USER y ADMIN)
-    // Si la crea un USER, el backend la asigna a SU cliente y la deja PENDIENTE,
-    // sin importar lo que venga en el JSON.
+    // POST /api/reservas  (SOLO CLIENTE, rol USER; ver SecurityConfig)
+    // Cada cliente hace SUS reservas: el backend la asigna al cliente que inicio
+    // sesion y la deja PENDIENTE, sin importar lo que venga en el JSON.
+    // El administrador no crea reservas: las aprueba, cancela o elimina.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public reserva crear(@RequestBody reserva reserva, Authentication authentication) {
         reserva.setId(null);
-        if (!Roles.esAdmin(authentication)) {
-            reserva.setUsuario(usuarioService.obtenerPorCorreo(authentication.getName()));
-            reserva.setEstado("PENDIENTE");
-        }
+        reserva.setUsuario(usuarioService.obtenerPorCorreo(authentication.getName()));
+        reserva.setEstado("PENDIENTE");
         return service.crear(reserva);
     }
 
@@ -80,8 +79,11 @@ public class reservaController {
     // PUT, PATCH y DELETE de reservas: SOLO ADMIN (lo controla SecurityConfig)
     @PutMapping("/{id}")
     public reserva actualizar(@PathVariable Long id, @RequestBody reserva reserva) {
-        service.obtenerPorId(id);
+        reserva actual = service.obtenerPorId(id);
         reserva.setId(id);
+        // El admin puede cambiar plan, fecha, hora, personas o estado,
+        // pero la reserva sigue siendo del MISMO cliente que la hizo.
+        reserva.setUsuario(actual.getUsuario());
         return service.actualizar(reserva);
     }
 

@@ -38,6 +38,21 @@
     }
   </label>
 
+  <!-- Solo al crear: contrasena con la que el cliente iniciara sesion -->
+  @if (esNuevo()) {
+    <label class="field full">
+      <span>Contraseña para iniciar sesión</span>
+      <input type="password" formControlName="contrasena" autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+      @if (campoConError('contrasena')) {
+        @if (tieneError('contrasena', 'required')) {
+          <small class="field-error">La contraseña es obligatoria.</small>
+        } @else {
+          <small class="field-error">La contraseña debe tener al menos 6 caracteres.</small>
+        }
+      }
+    </label>
+  }
+
   <div class="modal-actions full">
     <button type="button" class="btn btn-ghost" (click)="avisarCancelar()">Cancelar</button>
     <!-- Loading: mientras el padre espera al backend, el boton muestra un spinner -->

@@ -6,7 +6,7 @@ import { AuthService } from '../core/auth.service';
 import { BotonPagarComponent } from '../pagos/boton-pagar.component';
 import { ContadorService } from '../core/contador.service';
 import { ConfirmService } from '../core/confirm.service';
-import { ESTADOS_RESERVA, Plan, Reserva, Usuario } from '../core/models';
+import { ESTADOS_RESERVA, Plan, Reserva } from '../core/models';
 import { ToastService } from '../core/toast.service';
 import { contieneTexto, obtenerFechaDeHoy, obtenerIniciales } from '../core/utilidades';
 import { IconComponent } from '../shared/icon.component';
@@ -41,7 +41,6 @@ interface FormularioReserva {
 })
 export class ReservasPage implements OnInit {
   reservas: Reserva[] = [];
-  usuarios: Usuario[] = []; // para el select "Cliente"
   planes: Plan[] = []; // para el select "Plan"
 
   cargando = true;
@@ -64,10 +63,6 @@ export class ReservasPage implements OnInit {
 
   ngOnInit(): void {
     this.cargarReservas();
-    // La lista de clientes solo la necesita (y la puede pedir) el ADMIN
-    if (this.authService.esAdmin()) {
-      this.cargarUsuarios();
-    }
     this.cargarPlanes();
   }
 
@@ -81,14 +76,6 @@ export class ReservasPage implements OnInit {
       error: (error) => {
         this.toastService.error(this.apiService.obtenerMensajeError(error));
         this.cargando = false;
-      },
-    });
-  }
-
-  cargarUsuarios(): void {
-    this.apiService.get('usuarios').subscribe({
-      next: (datos) => {
-        this.usuarios = datos;
       },
     });
   }
@@ -169,19 +156,6 @@ export class ReservasPage implements OnInit {
       }
 
       resultado.push(reserva);
-    }
-    return resultado;
-  }
-
-  // Clientes para el select: solo los activos.
-  // Excepcion: si editamos una reserva de un cliente que despues se
-  // desactivo, lo incluimos para que el select no quede en blanco.
-  usuariosActivos(): Usuario[] {
-    const resultado: Usuario[] = [];
-    for (const usuario of this.usuarios) {
-      if (usuario.activo || usuario.id === this.formulario.usuarioId) {
-        resultado.push(usuario);
-      }
     }
     return resultado;
   }

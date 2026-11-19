@@ -50,16 +50,20 @@ import com.example.ProyectoWeb.Repository.usuarioRepository;
 //     GET  /api/publico/**        catalogo publico de planes
 //     POST /api/publico/registro  crear una cuenta de cliente
 //     POST /api/pagos/webhook     aviso de Wompi cuando cambia un pago
-//   USER y ADMIN:
+//   SOLO CLIENTE (rol USER):
+//     POST /api/reservas                 crear SU reserva
+//     POST /api/pagos/wompi/checkout     pagar SU reserva con Wompi
+//   CLIENTE y ADMIN:
 //     /api/auth/**                saber quien inicio sesion
 //     GET /api/planes/**, GET /api/lugares/**   ver el catalogo
-//     GET /api/reservas/**, POST /api/reservas  ver y crear reservas
-//                                 (un USER solo ve y crea las SUYAS)
-//     /api/pagos/wompi/**         pagar una reserva con Wompi
+//     GET /api/reservas/**        ver reservas (el cliente solo ve las SUYAS)
+//     /api/pagos/wompi/**         consultar como termino un pago
 //   SOLO ADMIN:
-//     todo lo demas de /api/**    usuarios, pagos, reportes, crear/editar/
-//                                 eliminar planes y lugares, editar o
-//                                 eliminar reservas...
+//     todo lo demas de /api/**    clientes, pagos, reportes, crear/editar/
+//                                 eliminar planes y lugares, aprobar,
+//                                 cancelar, editar o eliminar reservas...
+//
+// SOLO HAY DOS AMBIENTES: CLIENTE (rol USER) y ADMINISTRADOR (rol ADMIN).
 // =====================================================================
 @Configuration
 @EnableWebSecurity
@@ -144,14 +148,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/publico/registro").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pagos/webhook").permitAll()
 
-                        // ---- 2. USER y ADMIN ----
+                        // ---- 2. SOLO CLIENTE (USER): hacer y pagar SUS reservas ----
+                        .requestMatchers(HttpMethod.POST, "/api/reservas").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/wompi/checkout").hasRole("USER")
+
+                        // ---- 3. CLIENTE y ADMIN ----
                         .requestMatchers("/api/auth/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/planes/**", "/api/lugares/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/reservas").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/pagos/wompi/**").hasAnyRole("USER", "ADMIN")
 
-                        // ---- 3. SOLO ADMIN (todo lo demas de la API) ----
+                        // ---- 4. SOLO ADMIN (todo lo demas de la API) ----
                         .requestMatchers("/api/**").hasRole("ADMIN")
 
                         .anyRequest().permitAll()

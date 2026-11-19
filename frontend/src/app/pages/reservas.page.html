@@ -4,13 +4,16 @@
     <!-- El titulo cambia segun el rol: el ADMIN ve todas; un cliente (USER) solo las suyas -->
     @if (authService.esAdmin()) {
       <h1>Reservas</h1>
-      <p class="muted">Consulta, crea y aprueba las reservas de los clientes.</p>
+      <p class="muted">Las reservas las hacen los clientes. Aquí las apruebas, cancelas o eliminas.</p>
     } @else {
       <h1>Mis reservas</h1>
       <p class="muted">Reserva un plan y págalo en línea con Wompi.</p>
     }
   </div>
-  <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nueva reserva</button>
+  <!-- Solo el CLIENTE crea reservas (el backend responde 403 si lo intenta el admin) -->
+  @if (!authService.esAdmin()) {
+    <button class="btn btn-primary" (click)="abrirNuevo()"><app-icon name="plus" /> Nueva reserva</button>
+  }
 </header>
 
 <!-- Pildoras de estado: al hacer clic filtran la tabla -->
@@ -97,8 +100,8 @@
                 }
               </td>
               <td class="actions">
-                <!-- Pagar con Wompi: solo si la reserva sigue PENDIENTE (componente hijo con input()) -->
-                @if (reserva.estado === 'PENDIENTE' && reserva.id) {
+                <!-- Pagar con Wompi: solo el CLIENTE, y solo si la reserva sigue PENDIENTE (componente hijo con input()) -->
+                @if (!authService.esAdmin() && reserva.estado === 'PENDIENTE' && reserva.id) {
                   <app-boton-pagar [reservaId]="reserva.id" [monto]="precioDe(reserva)" />
                 }
                 <!-- Editar y eliminar: solo ADMIN (el backend tambien lo bloquea con 403) -->
@@ -121,19 +124,8 @@
   (closed)="cerrarModal()"
 >
   <form #f="ngForm" (ngSubmit)="guardar()" class="form-grid">
-    <!-- El ADMIN elige el cliente. Si la crea un USER, el backend la asigna a su propio cliente. -->
-    @if (authService.esAdmin()) {
-      <label class="field full">
-        <span>Cliente</span>
-        <!-- [ngValue] guarda el id como NUMERO (con [value] se guardaria como texto) -->
-        <select name="usuarioId" [(ngModel)]="formulario.usuarioId" required>
-          <option [ngValue]="null" disabled>Selecciona un cliente</option>
-          @for (usuario of usuariosActivos(); track usuario.id) {
-            <option [ngValue]="usuario.id">{{ usuario.nombreCompleto }} · {{ usuario.correo }}</option>
-          }
-        </select>
-      </label>
-    }
+    <!-- No hay campo "Cliente": la reserva siempre es del cliente que la hizo
+         (el backend la asigna al crear y la conserva al editar). -->
     <label class="field full">
       <span>Plan</span>
       <select name="planId" [(ngModel)]="formulario.planId" required>

@@ -11,7 +11,8 @@ import { ModalComponent } from '../shared/modal.component';
 import { UsuarioFormComponent } from './usuario-form.component';
 
 // =====================================================================
-// PAGINA DE USUARIOS (CLIENTES)
+// PAGINA DE CLIENTES (solo ADMIN). En el codigo y en la API se llama "usuarios"
+// porque asi se llama la tabla, pero en pantalla son los CLIENTES.
 // Tabla de clientes con filtro Todos / Activos / Inactivos.
 // Los usuarios no se borran: se "desactivan" (activo = false) y se
 // pueden volver a activar.
@@ -136,12 +137,12 @@ export class UsuariosPage implements OnInit {
 
     if (usuario.id) {
       this.apiService.put('usuarios/' + usuario.id, usuario).subscribe({
-        next: () => this.terminarDeGuardar('Usuario actualizado correctamente'),
+        next: () => this.terminarDeGuardar('Cliente actualizado correctamente'),
         error: (error) => this.mostrarErrorAlGuardar(error),
       });
     } else {
       this.apiService.post('usuarios', usuario).subscribe({
-        next: () => this.terminarDeGuardar('Usuario creado correctamente'),
+        next: () => this.terminarDeGuardar('Cliente creado correctamente'),
         error: (error) => this.mostrarErrorAlGuardar(error),
       });
     }
@@ -166,7 +167,7 @@ export class UsuariosPage implements OnInit {
   cambiarActivo(usuario: Usuario): void {
     if (usuario.activo) {
       this.confirmService.preguntar(
-        'Desactivar usuario',
+        'Desactivar cliente',
         usuario.nombreCompleto + ' no podrá usarse en nuevas reservas. Puedes reactivarlo cuando quieras.',
         'Desactivar',
         () => {
@@ -182,7 +183,7 @@ export class UsuariosPage implements OnInit {
   desactivar(usuario: Usuario): void {
     this.apiService.delete('usuarios/' + usuario.id).subscribe({
       next: () => {
-        this.toastService.exito('Usuario desactivado');
+        this.toastService.exito('Cliente desactivado');
         this.contadorService.registrarAccion(); // signal: suma 1 al contador
         this.cargarUsuarios();
       },
@@ -195,7 +196,7 @@ export class UsuariosPage implements OnInit {
   activar(usuario: Usuario): void {
     this.apiService.patch('usuarios/' + usuario.id + '/activar', {}).subscribe({
       next: () => {
-        this.toastService.exito('Usuario activado');
+        this.toastService.exito('Cliente activado');
         this.contadorService.registrarAccion(); // signal: suma 1 al contador
         this.cargarUsuarios();
       },

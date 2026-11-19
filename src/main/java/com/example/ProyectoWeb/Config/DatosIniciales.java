@@ -15,6 +15,7 @@ import com.example.ProyectoWeb.Repository.pagoRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,7 +30,8 @@ public class DatosIniciales {
             planRepository planRepository,
             lugarRepository lugarRepository,
             reservaRepository reservaRepository,
-            pagoRepository pagoRepository) {
+            pagoRepository pagoRepository,
+            PasswordEncoder passwordEncoder) {
 
         return args -> {
 
@@ -69,6 +71,15 @@ public class DatosIniciales {
                 usuario2 = usuarioRepository.findAll().get(1);
                 usuario3 = usuarioRepository.findAll().get(2);
             }
+
+            // Todo cliente debe poder iniciar sesion. juan y maria entran con los usuarios
+            // en memoria (SecurityConfig); carlos entra con la contrasena guardada aqui.
+            usuarioRepository.findByCorreo("carlos@gmail.com").ifPresent(carlos -> {
+                if (carlos.getContrasena() == null) {
+                    carlos.setContrasena(passwordEncoder.encode("carlos123"));
+                    usuarioRepository.save(carlos);
+                }
+            });
 
             plan plan1;
             plan plan2;

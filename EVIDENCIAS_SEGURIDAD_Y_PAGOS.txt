@@ -8,16 +8,24 @@ Rutas abreviadas:
   F = PartyPlan-main/frontend/src/app/
 Los numeros despues de ":" son la linea del archivo.
 
-USUARIOS DE PRUEBA (en memoria)
-  Usuario            Contrasena   Rol     Que puede hacer
+HAY SOLO DOS AMBIENTES
+  CLIENTE (rol USER)         Hace SUS reservas y las paga con Wompi. Ve planes y
+                             lugares. Nadie mas puede hacer reservas a su nombre.
+  ADMINISTRADOR (rol ADMIN)  Gestiona: aprueba, cancela, edita o elimina reservas;
+                             planes, lugares, clientes, pagos y reportes.
+                             NO crea ni paga reservas (eso lo hace el cliente).
+  (En el codigo y en la API la tabla de clientes se llama "usuarios"; en
+   pantalla aparece como "Clientes". El rol de Spring se llama USER.)
+
+CUENTAS DE PRUEBA
+  Correo / usuario   Contrasena   Rol     Donde esta guardada
   -----------------  -----------  ------  ---------------------------------------
-  admin              admin123     ADMIN   Todo: panel, pagos, usuarios, reportes,
-                                          crear/editar/eliminar planes y lugares
-  juan@gmail.com     juan123      USER    Ver planes y lugares, ver y crear SUS
-                                          reservas, pagarlas con Wompi
-  maria@gmail.com    maria123     USER    Lo mismo que juan (con sus reservas)
-  (cualquiera)       (la suya)    USER    Clientes que se registran en /registro:
-                                          se guardan en PostgreSQL con BCrypt
+  admin              admin123     ADMIN   En memoria (InMemoryUserDetailsManager)
+  juan@gmail.com     juan123      USER    En memoria (InMemoryUserDetailsManager)
+  maria@gmail.com    maria123     USER    En memoria (InMemoryUserDetailsManager)
+  carlos@gmail.com   carlos123    USER    En PostgreSQL (cifrada con BCrypt)
+  (cualquiera)       (la suya)    USER    En PostgreSQL: clientes que se registran
+                                          en /registro o que crea el admin
 
 Para arrancar:
   1. Abrir Docker Desktop. En PartyPlan-main:  docker compose up -d
@@ -34,23 +42,23 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
 1. SPRING SECURITY + SecurityConfig
 --------------------------------------------------------------------------------
   pom.xml:43                      spring-boot-starter-security
-  B/Config/SecurityConfig.java:65 @EnableWebSecurity
-  Arriba del archivo hay un resumen comentado de usuarios y permisos.
+  B/Config/SecurityConfig.java:69 @EnableWebSecurity
+  Arriba del archivo hay un resumen comentado de los dos ambientes y sus permisos.
 
 --------------------------------------------------------------------------------
 2. USUARIOS (minimo 3: 2 normales y 1 administrador)
 --------------------------------------------------------------------------------
-  B/Config/SecurityConfig.java:87   admin           -> .roles("ADMIN")  (:89)
-  B/Config/SecurityConfig.java:95   juan@gmail.com  -> .roles("USER")   (:97)
-  B/Config/SecurityConfig.java:101  maria@gmail.com -> .roles("USER")   (:103)
-  B/Config/SecurityConfig.java:106  new InMemoryUserDetailsManager(admin, juan, maria);
+  B/Config/SecurityConfig.java:91   admin           -> .roles("ADMIN")
+  B/Config/SecurityConfig.java:99   juan@gmail.com  -> .roles("USER")
+  B/Config/SecurityConfig.java:105  maria@gmail.com -> .roles("USER")
+  B/Config/SecurityConfig.java:110  new InMemoryUserDetailsManager(admin, juan, maria);
   Los USER usan como nombre el correo de su cliente (tabla usuarios). Asi el
   backend sabe cuales reservas son de cada uno.
 
 --------------------------------------------------------------------------------
 3. ROLES (USER y ADMIN, con permisos diferentes)
 --------------------------------------------------------------------------------
-  Ver la tabla "USUARIOS DE PRUEBA" arriba y las reglas del punto 6.
+  Ver "HAY SOLO DOS AMBIENTES" arriba y las reglas del punto 6.
 
 --------------------------------------------------------------------------------
 4. AUTENTICACION: inicio y cierre de sesion
@@ -70,95 +78,109 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
 --------------------------------------------------------------------------------
 5. CONTRASENAS CON BCrypt
 --------------------------------------------------------------------------------
-  B/Config/SecurityConfig.java:74   return new BCryptPasswordEncoder();
-  Cada usuario se crea con passwordEncoder.encode("..."): en memoria queda el
-  hash ($2a$10$...), nunca la contrasena en texto plano.
-  Los clientes registrados tambien: B/Controller/PublicoController.java:87
-  passwordEncoder.encode(contrasena) antes de guardarlos en PostgreSQL.
+  B/Config/SecurityConfig.java:78   return new BCryptPasswordEncoder();
+  Cada usuario se crea con passwordEncoder.encode("..."): queda el hash
+  ($2a$10$...), nunca la contrasena en texto plano. Tambien en PostgreSQL:
+    B/Controller/PublicoController.java:87   cliente que se registra
+    B/Controller/usuarioController.java:59   cliente que crea el admin
+    B/Config/DatosIniciales.java:79          contrasena de carlos
 
 --------------------------------------------------------------------------------
 6. ENDPOINTS PROTEGIDOS (publico / USER y ADMIN / solo ADMIN)
 --------------------------------------------------------------------------------
-  Reglas en B/Config/SecurityConfig.java:140 a :157 (la primera que coincide gana)
+  Reglas en B/Config/SecurityConfig.java:144 a :164 (la primera que coincide gana)
 
   PUBLICO (sin iniciar sesion):
-    :143  GET  /api/publico/**        -> B/Controller/PublicoController.java:43 (catalogo de planes)
-    :144  POST /api/publico/registro  -> B/Controller/PublicoController.java:59 (crear cuenta)
-    :145  POST /api/pagos/webhook     -> aviso de Wompi (se valida con firma, no con usuario)
-  USER y ADMIN:
-    :148  /api/auth/**             -> quien inicio sesion
-    :149  GET /api/planes/**, GET /api/lugares/**
-    :150  GET /api/reservas/**
-    :151  POST /api/reservas
-    :152  /api/pagos/wompi/**      -> pagar con Wompi
+    :147  GET  /api/publico/**        -> B/Controller/PublicoController.java:43 (catalogo de planes)
+    :148  POST /api/publico/registro  -> B/Controller/PublicoController.java:59 (crear cuenta)
+    :149  POST /api/pagos/webhook     -> aviso de Wompi (se valida con firma, no con usuario)
+  SOLO CLIENTE (USER):
+    :152  POST /api/reservas                -> hacer SU reserva
+    :153  POST /api/pagos/wompi/checkout    -> pagar SU reserva
+  CLIENTE y ADMIN (USER y ADMIN):
+    :156  /api/auth/**             -> quien inicio sesion
+    :157  GET /api/planes/**, GET /api/lugares/**
+    :158  GET /api/reservas/**      -> el cliente solo ve las suyas
+    :159  /api/pagos/wompi/**      -> consultar como termino un pago
   SOLO ADMIN:
-    :155  todo lo demas de /api/** -> ej. DELETE /api/planes/1, GET /api/usuarios,
-          GET /api/reportes/..., POST /api/lugares, PUT/DELETE /api/reservas/...
+    :162  todo lo demas de /api/** -> ej. DELETE /api/planes/1, GET /api/usuarios,
+          GET /api/reportes/..., POST /api/lugares, PATCH/PUT/DELETE /api/reservas/...
 
 --------------------------------------------------------------------------------
-7. AUTORIZACION EN UNA FUNCIONALIDAD REAL
+7. AUTORIZACION EN UNA FUNCIONALIDAD REAL: las reservas
 --------------------------------------------------------------------------------
-  Reservas: el ADMIN ve todas; un USER solo ve y crea las suyas.
-    B/Controller/reservaController.java:42  if (Roles.esAdmin(...)) -> todas
-    B/Controller/reservaController.java:45  si no, solo las de su cliente (por su correo)
-    B/Controller/reservaController.java:53  GET /{id} de otro cliente -> 403
-    B/Controller/reservaController.java:67  POST de un USER: se asigna a SU cliente y queda PENDIENTE
-  Pagos Wompi: un USER solo puede pagar sus reservas (403 si no):
-    B/pagos/WompiCheckoutController.java  crearCheckout()
-  Gestion (planes, lugares, usuarios, pagos, reportes): solo ADMIN (regla :155).
+  Cada cliente hace, ve y paga SOLO SUS reservas; el admin las gestiona.
+    B/Config/SecurityConfig.java:152          crear reserva: solo USER (el admin recibe 403)
+    B/Controller/reservaController.java:42    ver: el ADMIN ve todas...
+    B/Controller/reservaController.java:45    ...el cliente solo las de su correo
+    B/Controller/reservaController.java:53    GET /{id} de otro cliente -> 403
+    B/Controller/reservaController.java:68    crear: siempre a nombre del cliente que inicio sesion
+    B/Controller/reservaController.java:86    editar (admin): la reserva sigue siendo del mismo cliente
+    B/Config/SecurityConfig.java:153          pagar con Wompi: solo USER
+    B/pagos/WompiCheckoutController.java      crearCheckout(): solo SUS reservas (403 si no)
+  Gestion (planes, lugares, clientes, pagos, reportes): solo ADMIN (regla :162).
 
 --------------------------------------------------------------------------------
 8. INTEGRACION CON ANGULAR (login y opciones segun el rol)
 --------------------------------------------------------------------------------
   Pantalla de login:  F/pages/login.page.ts / .html
-    :52  despues de entrar: ADMIN -> panel (/), USER -> sus reservas (/reservas)
+    :52  despues de entrar: ADMIN -> panel (/), CLIENTE -> sus reservas (/reservas)
   Menu segun el rol:  F/layout/shell.component.ts  opcionesVisibles() y nombreDelRol()
-    ADMIN ve: Inicio, Reportes, Reservas, Pagos, Planes, Lugares, Usuarios
-    USER ve:  Reservas, Planes, Lugares   (y debajo de su nombre dice "Cliente")
+    ADMIN ve:   Inicio, Reportes, Reservas, Pagos, Planes, Lugares, Clientes
+                (debajo de su nombre dice "Administrador")
+    CLIENTE ve: Reservas, Planes, Lugares (debajo de su nombre dice "Cliente")
   Botones segun el rol:
-    F/pages/planes.page.html:8 y :64     Nuevo / editar / eliminar plan: solo ADMIN
-    F/pages/lugares.page.html:9 y :59    Nuevo / editar / eliminar lugar: solo ADMIN
-    F/pages/reservas.page.html:5         titulo "Mis reservas" para USER
-    F/pages/reservas.page.html:80        USER ve el estado; ADMIN lo puede cambiar
-    F/pages/reservas.page.html:105       editar y eliminar reservas: solo ADMIN
+    F/pages/reservas.page.html:5     titulo: "Reservas" (admin) / "Mis reservas" (cliente)
+    F/pages/reservas.page.html:14    "Nueva reserva": solo el CLIENTE
+    F/pages/reservas.page.html:83    el cliente ve el estado; el ADMIN lo cambia
+    F/pages/reservas.page.html:104   "Pagar con Wompi": solo el CLIENTE
+    F/pages/reservas.page.html:108   editar y eliminar reservas: solo ADMIN
+    F/pages/planes.page.html:8 y :64     nuevo / editar / eliminar plan: solo ADMIN
+    F/pages/lugares.page.html:9 y :59    nuevo / editar / eliminar lugar: solo ADMIN
   Paginas segun el rol (guards):
-    F/core/auth.guard.ts:32   adminGuard: si un USER escribe /usuarios en la barra,
+    F/core/auth.guard.ts:32   adminGuard: si un cliente escribe /clientes en la barra,
                               muestra "No tienes permisos para ver esa página."
-    F/app.routes.ts:48 a :51  Inicio, Pagos, Usuarios y Reportes llevan adminGuard
+    F/app.routes.ts:58 a :61  Inicio, Pagos, Clientes y Reportes llevan adminGuard
 
   IMPORTANTE: ocultar botones es solo visual. La seguridad real esta en el
-  backend: si un USER llama directamente a DELETE /api/planes/1 recibe 403.
+  backend: si un cliente llama a DELETE /api/planes/1, o el admin intenta
+  crear una reserva con POST /api/reservas, recibe 403.
 
 --------------------------------------------------------------------------------
 9. MANEJO DE ERRORES (credenciales incorrectas y falta de permisos)
 --------------------------------------------------------------------------------
   Backend:
-    B/Config/SecurityConfig.java:169  401 -> {"mensaje":"Credenciales inválidas o sesión expirada."}
-    B/Config/SecurityConfig.java:179  403 -> {"mensaje":"No tienes permisos para realizar esta operación."}
+    B/Config/SecurityConfig.java:176  401 -> {"mensaje":"Credenciales inválidas o sesión expirada."}
+    B/Config/SecurityConfig.java:186  403 -> {"mensaje":"No tienes permisos para realizar esta operación."}
   Frontend:
     F/pages/login.page.ts:56   401 en el login -> "Usuario o contraseña incorrectos."
     F/core/api.service.ts      obtenerMensajeError(): muestra el mensaje del backend
                                (403 -> "No tienes permisos para realizar esta operación.")
-    F/core/auth.guard.ts:32    pagina de ADMIN abierta por un USER -> aviso rojo
+    F/core/auth.guard.ts:32    pagina de ADMIN abierta por un cliente -> aviso rojo
 
 --------------------------------------------------------------------------------
-REGISTRO DE CLIENTES (opcional de la rubrica: usuarios en PostgreSQL)
+CUENTAS DE CLIENTE (opcional de la rubrica: usuarios en PostgreSQL)
 --------------------------------------------------------------------------------
-  Para que un cliente nuevo pueda comprar, primero crea su cuenta.
-  Backend:
+  Todo cliente tiene cuenta, porque es quien hace las reservas. Hay dos formas:
+  a) El cliente se registra solo:
     B/Controller/PublicoController.java:59  POST /api/publico/registro (PUBLICO)
       valida nombre (3+ letras), correo, telefono (7-15 digitos) y contrasena
       (6+ caracteres); 409 si el correo ya existe; guarda la contrasena con BCrypt.
-    B/Entities/usuario.java:47      campo contrasena con @JsonIgnore (nunca sale en el JSON)
-    B/Config/SecurityConfig.java:84 UserDetailsService que busca en DOS lugares:
-      :110 primero en memoria (InMemoryUserDetailsManager: admin, juan, maria)
-      :115 luego en PostgreSQL (clientes registrados, rol USER; si el admin los
-           desactiva ya no pueden entrar)
-  Frontend:
     F/pages/login.page.html:61     enlace "¿No tienes cuenta? Regístrate gratis"
     F/pages/registro.page.ts:28    formulario reactivo (5 campos, validaciones y
                                    "Las contraseñas no coinciden")
     F/pages/registro.page.ts:80    POST publico/registro y luego inicia sesion solo
+  b) El admin lo crea en "Clientes" -> "Nuevo cliente", con una contrasena:
+    B/Controller/usuarioController.java:52   400 si falta la contrasena (6+ caracteres)
+    F/pages/usuario-form.component.html:42   campo "Contraseña para iniciar sesión"
+                                             (solo al crear, no al editar)
+  Como se valida el inicio de sesion:
+    B/Config/SecurityConfig.java:88  UserDetailsService que busca en DOS lugares:
+      :114 primero en memoria (InMemoryUserDetailsManager: admin, juan, maria)
+      :119 luego en PostgreSQL (clientes con contrasena, rol USER; si el admin
+           los desactiva ya no pueden entrar)
+    B/Entities/usuario.java   la contrasena es WRITE_ONLY: se recibe al crear,
+                              pero nunca sale en las respuestas JSON
   Prueba: /registro -> crear cuenta -> entra directo a "Mis reservas" como Cliente.
   curl.exe -i -X POST -H "Content-Type: application/json" -d "{\"nombreCompleto\":\"Ana Ruiz\",\"correo\":\"ana@correo.com\",\"telefono\":\"3001112233\",\"contrasena\":\"ana12345\"}" http://localhost:8080/api/publico/registro
   -> 201. Luego: curl.exe -i -u ana@correo.com:ana12345 http://localhost:8080/api/auth/me -> 200 USER
@@ -187,8 +209,10 @@ Se pueden mostrar en el navegador o con curl en PowerShell (curl.exe).
   d) ACCESO DENEGADO POR FALTA DE PERMISOS
      curl.exe -i -u juan@gmail.com:juan123 -X DELETE http://localhost:8080/api/planes/1
      curl.exe -i -u juan@gmail.com:juan123 http://localhost:8080/api/usuarios
+     curl.exe -i -u admin:admin123 -X POST -H "Content-Type: application/json" -d "{\"plan\":{\"id\":1},\"fecha\":\"2026-12-20\",\"hora\":\"20:00\",\"numeroPersonas\":2}" http://localhost:8080/api/reservas
+     (el admin tampoco puede crear reservas: eso solo lo hace el cliente)
      Resultado: 403 {"mensaje":"No tienes permisos para realizar esta operación."}
-     App: como juan, escribir en la barra http://localhost:4200/usuarios
+     App: como juan, escribir en la barra http://localhost:4200/clientes
           -> aviso rojo "No tienes permisos para ver esa página."
      Extra: juan no ve las reservas de maria (GET /api/reservas solo devuelve las suyas).
 

@@ -102,12 +102,12 @@ destellos) gracias al @switch.
 --------------------------------------------------------------------------------
 9. COMUNICACION PADRE-HIJO: input(), output(), emit(), $event
 --------------------------------------------------------------------------------
-Funcionalidad: SELECCIONAR Y EDITAR UN USUARIO.
+Funcionalidad: SELECCIONAR Y EDITAR UN CLIENTE (pantalla "Clientes", solo admin).
   PADRE: F/pages/usuarios.page.ts / .html
   HIJO:  F/pages/usuario-form.component.ts / .html
 Paso a paso:
-  1. En la tabla de Usuarios se pulsa el lapiz -> abrirEditar(usuario)
-     F/pages/usuarios.page.ts:121 guarda usuarioSeleccionado = usuario.
+  1. En la tabla de Clientes se pulsa el lapiz -> abrirEditar(usuario)
+     F/pages/usuarios.page.ts:122 guarda usuarioSeleccionado = usuario.
   2. El padre se lo envia al hijo:
      F/pages/usuarios.page.html  <app-usuario-form [usuario]="usuarioSeleccionado" ...>
   3. input(): el hijo lo recibe
@@ -116,11 +116,11 @@ Paso a paso:
   4. output(): el hijo declara el evento
      F/pages/usuario-form.component.ts:36  guardar = output<Usuario>();
   5. emit(): al pulsar Guardar el hijo envia el usuario modificado
-     F/pages/usuario-form.component.ts:113 this.guardar.emit(usuarioModificado);
+     F/pages/usuario-form.component.ts:130 this.guardar.emit(usuarioModificado);
   6. $event: el padre lo recibe
      F/pages/usuarios.page.html:88  (guardar)="guardarUsuario($event)"
-     F/pages/usuarios.page.ts:134   guardarUsuario(usuario: Usuario) -> PUT al backend
-Mostrar: Usuarios -> lapiz de un cliente -> cambiar el nombre -> Guardar ->
+     F/pages/usuarios.page.ts:135   guardarUsuario(usuario: Usuario) -> PUT al backend
+Mostrar: entrar como admin -> Clientes -> lapiz de un cliente -> cambiar el nombre -> Guardar ->
 la tabla se actualiza.
 (Tambien usan input()/output(): F/shared/modal.component.ts,
  icon.component.ts y bar-list.component.ts)
@@ -155,7 +155,7 @@ Mensajes: F/pages/usuario-form.component.html:10 a :36
   "El teléfono es obligatorio." / "Solo números, de 7 a 15 dígitos."
 Como: campoConError() solo muestra el mensaje si el campo esta mal y ya se
 toco; tieneError() dice cual regla fallo.
-Mostrar: Usuarios -> Nuevo usuario -> escribir "Al" en el nombre, "malo" en
+Mostrar: entrar como admin -> Clientes -> Nuevo cliente -> escribir "Al" en el nombre, "malo" en
 el correo, "12" en el telefono -> aparecen los mensajes en rojo.
 
 --------------------------------------------------------------------------------
@@ -193,11 +193,11 @@ el correo, "12" en el telefono -> aparecen los mensajes en rojo.
 17-20. GET, POST, PUT, DELETE (2 de cada uno, con subscribe)
 --------------------------------------------------------------------------------
   GET     F/pages/lugares.page.ts:59    apiService.get('lugares/paginado?...').subscribe
-          F/pages/usuarios.page.ts:63   apiService.get('usuarios').subscribe
+          F/pages/usuarios.page.ts:64   apiService.get('usuarios').subscribe
   POST    F/pages/lugares.page.ts:142   apiService.post('lugares', ...).subscribe
-          F/pages/usuarios.page.ts:143  apiService.post('usuarios', ...).subscribe
+          F/pages/usuarios.page.ts:144  apiService.post('usuarios', ...).subscribe
   PUT     F/pages/lugares.page.ts:137   apiService.put('lugares/' + id, ...).subscribe
-          F/pages/usuarios.page.ts:138  apiService.put('usuarios/' + id, ...).subscribe
+          F/pages/usuarios.page.ts:139  apiService.put('usuarios/' + id, ...).subscribe
   DELETE  F/pages/lugares.page.ts:171   apiService.delete('lugares/' + id).subscribe
           F/pages/planes.page.ts:142    apiService.delete('planes/' + id).subscribe
   (Tambien hay GET/POST/PUT/DELETE en planes, reservas y pagos.)
@@ -213,7 +213,7 @@ Cada subscribe tiene next: (si salio bien) y error: (si fallo).
   F/pages/login.page.ts:55  401 en el login -> "Usuario o contraseña incorrectos."
 Situaciones para mostrar en vivo:
   a) Login con contraseña incorrecta -> 401 -> mensaje rojo.
-  b) Usuarios -> crear uno con el correo juan@gmail.com -> 409
+  b) Clientes -> Nuevo cliente con el correo juan@gmail.com -> 409
      -> "El correo electrónico ... ya está en uso por otro usuario."
   c) Planes -> eliminar "Ruta Candelaria" (tiene reservas) -> 409
      -> "No se puede completar la operación: el registro está relacionado..."

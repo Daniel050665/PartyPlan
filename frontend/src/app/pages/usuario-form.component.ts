@@ -54,16 +54,31 @@ export class UsuarioFormComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern('[0-9+ ]{7,15}')],
     }),
+    // Contrasena: solo se pide al CREAR un cliente (para que pueda iniciar sesion).
+    // Sus reglas se ponen en ngOnInit, solo si es un cliente nuevo.
+    contrasena: new FormControl('', { nonNullable: true }),
   });
+
+  // true si estamos creando un cliente (el padre no mando ninguno)
+  esNuevo(): boolean {
+    return this.usuario() === null;
+  }
 
   // Al abrirse, si el padre mando un usuario (edicion), llenamos los campos
   ngOnInit(): void {
+    // Cliente nuevo: la contrasena es obligatoria y de al menos 6 caracteres
+    if (this.esNuevo()) {
+      this.formulario.controls.contrasena.setValidators([Validators.required, Validators.minLength(6)]);
+      this.formulario.controls.contrasena.updateValueAndValidity();
+    }
+
     const usuarioSeleccionado = this.usuario();
     if (usuarioSeleccionado !== null) {
       this.formulario.setValue({
         nombreCompleto: usuarioSeleccionado.nombreCompleto,
         correo: usuarioSeleccionado.correo,
         telefono: usuarioSeleccionado.telefono,
+        contrasena: '', // al editar no se cambia la contrasena
       });
     }
   }
@@ -107,6 +122,8 @@ export class UsuarioFormComponent implements OnInit {
     if (usuarioSeleccionado !== null) {
       usuarioModificado.id = usuarioSeleccionado.id;
       usuarioModificado.activo = usuarioSeleccionado.activo;
+    } else {
+      usuarioModificado.contrasena = valores.contrasena; // cliente nuevo: enviamos su contrasena
     }
 
     // emit() envia el dato al padre. El padre lo recibe en $event.

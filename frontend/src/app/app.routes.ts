@@ -20,8 +20,10 @@ import { UsuariosPage } from './pages/usuarios.page';
 //   canActivate = el "portero" que decide si se puede entrar
 //
 // Paginas por rol:
-//   ADMIN: todas.
-//   USER:  Reservas (las suyas), Planes, Lugares y el resultado del pago.
+// Solo hay DOS ambientes:
+//   CLIENTE (rol USER):        Mis reservas (crearlas y pagarlas), Planes, Lugares.
+//   ADMINISTRADOR (rol ADMIN): Inicio, Reportes, Reservas (aprobar/cancelar), Pagos,
+//                              Planes, Lugares y Clientes.
 // =====================================================================
 
 export const routes: Routes = [
@@ -55,7 +57,7 @@ export const routes: Routes = [
       // Solo ADMIN
       { path: '', title: 'Inicio · PartyPlan', component: DashboardPage, canActivate: [inicioGuard] },
       { path: 'pagos', title: 'Pagos · PartyPlan', component: PagosPage, canActivate: [adminGuard] },
-      { path: 'usuarios', title: 'Usuarios · PartyPlan', component: UsuariosPage, canActivate: [adminGuard] },
+      { path: 'clientes', title: 'Clientes · PartyPlan', component: UsuariosPage, canActivate: [adminGuard] },
       { path: 'reportes', title: 'Reportes · PartyPlan', component: ReportesPage, canActivate: [adminGuard] },
     ],
   },
