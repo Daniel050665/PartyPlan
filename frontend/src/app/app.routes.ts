@@ -7,6 +7,7 @@ import { LoginPage } from './pages/login.page';
 import { LugaresPage } from './pages/lugares.page';
 import { PagosPage } from './pages/pagos.page';
 import { PlanesPage } from './pages/planes.page';
+import { RegistroPage } from './pages/registro.page';
 import { ReportesPage } from './pages/reportes.page';
 import { ReservasPage } from './pages/reservas.page';
 import { UsuariosPage } from './pages/usuarios.page';
@@ -28,6 +29,13 @@ export const routes: Routes = [
     path: 'login',
     title: 'Iniciar sesión · PartyPlan',
     component: LoginPage,
+    canActivate: [invitadoGuard],
+  },
+  {
+    // Registro de clientes nuevos (publico: no necesita sesion)
+    path: 'registro',
+    title: 'Crear cuenta · PartyPlan',
+    component: RegistroPage,
     canActivate: [invitadoGuard],
   },
   {

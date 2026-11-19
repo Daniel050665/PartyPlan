@@ -60,6 +60,7 @@ public class usuarioController {
         usuario actual = service.obtenerPorId(id);
         usuario.setId(id);
         usuario.setActivo(actual.isActivo()); // editar no cambia si esta activo o no
+        usuario.setContrasena(actual.getContrasena()); // ni borra la contrasena del cliente
         return ResponseEntity.ok(service.guardar(usuario));
     }
 

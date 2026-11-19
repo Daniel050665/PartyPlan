@@ -1,0 +1,98 @@
+<div class="login">
+  <!-- Parte izquierda: la misma portada del login -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="brand">
+      <span class="brand-mark"><app-icon name="moon" [size]="20" /></span>
+      <span>Party<b>Plan</b></span>
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow">Bogotá · Cultura y vida nocturna</p>
+      <h1>Crea tu cuenta y reserva tu próximo plan.</h1>
+      <p>Museos, recorridos y vida nocturna. Reserva en minutos y paga en línea con Wompi.</p>
+    </div>
+    <ul class="hero-tags">
+      <li><app-icon name="landmark" [size]="16" /> Museos</li>
+      <li><app-icon name="music" [size]="16" /> Discotecas</li>
+      <li><app-icon name="card" [size]="16" /> Pago en línea</li>
+    </ul>
+  </section>
+
+  <!-- Parte derecha: formulario de registro -->
+  <section class="panel">
+    <form class="login-card" [formGroup]="formulario" (ngSubmit)="registrar()">
+      <h2>Crea tu cuenta</h2>
+      <p class="muted">Es gratis. Solo necesitas un correo.</p>
+
+      @if (error) {
+        <div class="alert">{{ error }}</div>
+      }
+
+      <label class="field">
+        <span>Nombre completo</span>
+        <input formControlName="nombreCompleto" autocomplete="name" placeholder="Ana Rodríguez" />
+        @if (campoConError('nombreCompleto')) {
+          @if (tieneError('nombreCompleto', 'required')) {
+            <small class="field-error">El nombre es obligatorio.</small>
+          } @else {
+            <small class="field-error">El nombre debe tener al menos 3 letras.</small>
+          }
+        }
+      </label>
+
+      <label class="field">
+        <span>Correo</span>
+        <input type="email" formControlName="correo" autocomplete="email" placeholder="ana@correo.com" />
+        @if (campoConError('correo')) {
+          @if (tieneError('correo', 'required')) {
+            <small class="field-error">El correo es obligatorio.</small>
+          } @else {
+            <small class="field-error">Escribe un correo válido (ej. ana@correo.com).</small>
+          }
+        }
+      </label>
+
+      <label class="field">
+        <span>Teléfono</span>
+        <input formControlName="telefono" autocomplete="tel" placeholder="3001234567" />
+        @if (campoConError('telefono')) {
+          @if (tieneError('telefono', 'required')) {
+            <small class="field-error">El teléfono es obligatorio.</small>
+          } @else {
+            <small class="field-error">Solo números, de 7 a 15 dígitos.</small>
+          }
+        }
+      </label>
+
+      <label class="field">
+        <span>Contraseña</span>
+        <input type="password" formControlName="contrasena" autocomplete="new-password" placeholder="Mínimo 6 caracteres" />
+        @if (campoConError('contrasena')) {
+          @if (tieneError('contrasena', 'required')) {
+            <small class="field-error">La contraseña es obligatoria.</small>
+          } @else {
+            <small class="field-error">La contraseña debe tener al menos 6 caracteres.</small>
+          }
+        }
+      </label>
+
+      <label class="field">
+        <span>Confirmar contraseña</span>
+        <input type="password" formControlName="confirmarContrasena" autocomplete="new-password" placeholder="Repite la contraseña" />
+        @if (contrasenasDistintas()) {
+          <small class="field-error">Las contraseñas no coinciden.</small>
+        }
+      </label>
+
+      <button class="btn btn-primary btn-block" [disabled]="cargando">
+        @if (cargando) {
+          <span class="spinner"></span> Creando tu cuenta…
+        } @else {
+          Crear cuenta <app-icon name="arrow" />
+        }
+      </button>
+
+      <p class="cambiar-pantalla">¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></p>
+    </form>
+  </section>
+</div>

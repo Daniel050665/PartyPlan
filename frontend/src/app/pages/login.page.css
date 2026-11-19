@@ -139,3 +139,27 @@
     border-bottom: 1px solid var(--border);
   }
 }
+
+/* Enlace "¿No tienes cuenta? Regístrate" (lo usan login y registro) */
+.cambiar-pantalla {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.cambiar-pantalla a {
+  color: var(--primary-light);
+  font-weight: 600;
+}
+
+.cambiar-pantalla a:hover {
+  color: var(--text);
+}
+
+/* Mensaje rojo debajo de un campo con error (registro) */
+.field-error {
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 500;
+}

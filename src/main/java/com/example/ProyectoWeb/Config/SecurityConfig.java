@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -23,6 +25,9 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.example.ProyectoWeb.Entities.usuario;
+import com.example.ProyectoWeb.Repository.usuarioRepository;
 
 // =====================================================================
 // CONFIGURACION DE SPRING SECURITY
@@ -37,10 +42,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 //   admin            / admin123  -> rol ADMIN
 //   juan@gmail.com   / juan123   -> rol USER (cliente Juan Perez)
 //   maria@gmail.com  / maria123  -> rol USER (cliente Maria Gonzalez)
+// Ademas, cualquier persona puede registrarse (POST /api/publico/registro):
+// queda guardada en PostgreSQL con rol USER y contrasena cifrada con BCrypt.
 //
 // Permisos (la regla que coincide primero es la que se aplica):
 //   PUBLICO (sin iniciar sesion):
 //     GET  /api/publico/**        catalogo publico de planes
+//     POST /api/publico/registro  crear una cuenta de cliente
 //     POST /api/pagos/webhook     aviso de Wompi cuando cambia un pago
 //   USER y ADMIN:
 //     /api/auth/**                saber quien inicio sesion
@@ -66,9 +74,14 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Los 3 usuarios de prueba, guardados en memoria
+    // ¿Quien puede iniciar sesion? Este UserDetailsService busca al usuario en DOS lugares:
+    //   1. En MEMORIA: los 3 usuarios de prueba (InMemoryUserDetailsManager).
+    //   2. En POSTGRESQL: los clientes que se registraron en la app (tabla usuarios,
+    //      columna contrasena cifrada con BCrypt). Todos tienen rol USER.
+    // Spring Security llama a loadUserByUsername("correo") en cada peticion y compara
+    // la contrasena recibida con la guardada usando BCrypt.
     @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder, usuarioRepository usuarioRepository) {
 
         UserDetails admin = User.builder()
                 .username("admin")
@@ -90,7 +103,28 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, juan, maria);
+        InMemoryUserDetailsManager usuariosEnMemoria = new InMemoryUserDetailsManager(admin, juan, maria);
+
+        return nombreUsuario -> {
+            // 1. ¿Es uno de los usuarios de prueba?
+            if (usuariosEnMemoria.userExists(nombreUsuario)) {
+                return usuariosEnMemoria.loadUserByUsername(nombreUsuario);
+            }
+
+            // 2. ¿Es un cliente registrado en la base de datos?
+            usuario cliente = usuarioRepository.findByCorreo(nombreUsuario)
+                    .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario " + nombreUsuario));
+            if (cliente.getContrasena() == null) {
+                // cliente creado por el admin, que nunca se registro: no puede iniciar sesion
+                throw new UsernameNotFoundException("El cliente " + nombreUsuario + " no tiene cuenta");
+            }
+            return User.builder()
+                    .username(cliente.getCorreo())
+                    .password(cliente.getContrasena()) // ya viene cifrada con BCrypt
+                    .roles("USER")
+                    .disabled(!cliente.isActivo()) // un cliente desactivado no puede entrar
+                    .build();
+        };
     }
 
     @Bean
@@ -107,6 +141,7 @@ public class SecurityConfig {
 
                         // ---- 1. PUBLICOS ----
                         .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/publico/registro").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pagos/webhook").permitAll()
 
                         // ---- 2. USER y ADMIN ----

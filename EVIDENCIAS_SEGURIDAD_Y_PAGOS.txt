@@ -16,6 +16,8 @@ USUARIOS DE PRUEBA (en memoria)
   juan@gmail.com     juan123      USER    Ver planes y lugares, ver y crear SUS
                                           reservas, pagarlas con Wompi
   maria@gmail.com    maria123     USER    Lo mismo que juan (con sus reservas)
+  (cualquiera)       (la suya)    USER    Clientes que se registran en /registro:
+                                          se guardan en PostgreSQL con BCrypt
 
 Para arrancar:
   1. Abrir Docker Desktop. En PartyPlan-main:  docker compose up -d
@@ -32,16 +34,16 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
 1. SPRING SECURITY + SecurityConfig
 --------------------------------------------------------------------------------
   pom.xml:43                      spring-boot-starter-security
-  B/Config/SecurityConfig.java:57 @EnableWebSecurity
+  B/Config/SecurityConfig.java:65 @EnableWebSecurity
   Arriba del archivo hay un resumen comentado de usuarios y permisos.
 
 --------------------------------------------------------------------------------
 2. USUARIOS (minimo 3: 2 normales y 1 administrador)
 --------------------------------------------------------------------------------
-  B/Config/SecurityConfig.java:74   admin           -> .roles("ADMIN")  (:76)
-  B/Config/SecurityConfig.java:82   juan@gmail.com  -> .roles("USER")   (:84)
-  B/Config/SecurityConfig.java:88   maria@gmail.com -> .roles("USER")   (:90)
-  B/Config/SecurityConfig.java:93   return new InMemoryUserDetailsManager(admin, juan, maria);
+  B/Config/SecurityConfig.java:87   admin           -> .roles("ADMIN")  (:89)
+  B/Config/SecurityConfig.java:95   juan@gmail.com  -> .roles("USER")   (:97)
+  B/Config/SecurityConfig.java:101  maria@gmail.com -> .roles("USER")   (:103)
+  B/Config/SecurityConfig.java:106  new InMemoryUserDetailsManager(admin, juan, maria);
   Los USER usan como nombre el correo de su cliente (tabla usuarios). Asi el
   backend sabe cuales reservas son de cada uno.
 
@@ -68,26 +70,29 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
 --------------------------------------------------------------------------------
 5. CONTRASENAS CON BCrypt
 --------------------------------------------------------------------------------
-  B/Config/SecurityConfig.java:66   return new BCryptPasswordEncoder();
+  B/Config/SecurityConfig.java:74   return new BCryptPasswordEncoder();
   Cada usuario se crea con passwordEncoder.encode("..."): en memoria queda el
   hash ($2a$10$...), nunca la contrasena en texto plano.
+  Los clientes registrados tambien: B/Controller/PublicoController.java:87
+  passwordEncoder.encode(contrasena) antes de guardarlos en PostgreSQL.
 
 --------------------------------------------------------------------------------
 6. ENDPOINTS PROTEGIDOS (publico / USER y ADMIN / solo ADMIN)
 --------------------------------------------------------------------------------
-  Reglas en B/Config/SecurityConfig.java:106 a :122 (la primera que coincide gana)
+  Reglas en B/Config/SecurityConfig.java:140 a :157 (la primera que coincide gana)
 
   PUBLICO (sin iniciar sesion):
-    :109  GET  /api/publico/**     -> B/Controller/PublicoController.java:30 (catalogo de planes)
-    :110  POST /api/pagos/webhook  -> aviso de Wompi (se valida con firma, no con usuario)
+    :143  GET  /api/publico/**        -> B/Controller/PublicoController.java:43 (catalogo de planes)
+    :144  POST /api/publico/registro  -> B/Controller/PublicoController.java:59 (crear cuenta)
+    :145  POST /api/pagos/webhook     -> aviso de Wompi (se valida con firma, no con usuario)
   USER y ADMIN:
-    :113  /api/auth/**             -> quien inicio sesion
-    :114  GET /api/planes/**, GET /api/lugares/**
-    :115  GET /api/reservas/**
-    :116  POST /api/reservas
-    :117  /api/pagos/wompi/**      -> pagar con Wompi
+    :148  /api/auth/**             -> quien inicio sesion
+    :149  GET /api/planes/**, GET /api/lugares/**
+    :150  GET /api/reservas/**
+    :151  POST /api/reservas
+    :152  /api/pagos/wompi/**      -> pagar con Wompi
   SOLO ADMIN:
-    :120  todo lo demas de /api/** -> ej. DELETE /api/planes/1, GET /api/usuarios,
+    :155  todo lo demas de /api/** -> ej. DELETE /api/planes/1, GET /api/usuarios,
           GET /api/reportes/..., POST /api/lugares, PUT/DELETE /api/reservas/...
 
 --------------------------------------------------------------------------------
@@ -100,7 +105,7 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
     B/Controller/reservaController.java:67  POST de un USER: se asigna a SU cliente y queda PENDIENTE
   Pagos Wompi: un USER solo puede pagar sus reservas (403 si no):
     B/pagos/WompiCheckoutController.java  crearCheckout()
-  Gestion (planes, lugares, usuarios, pagos, reportes): solo ADMIN (regla :120).
+  Gestion (planes, lugares, usuarios, pagos, reportes): solo ADMIN (regla :155).
 
 --------------------------------------------------------------------------------
 8. INTEGRACION CON ANGULAR (login y opciones segun el rol)
@@ -128,13 +133,35 @@ PARTE 1. SPRING SECURITY - REQUISITO POR REQUISITO
 9. MANEJO DE ERRORES (credenciales incorrectas y falta de permisos)
 --------------------------------------------------------------------------------
   Backend:
-    B/Config/SecurityConfig.java:134  401 -> {"mensaje":"Credenciales inválidas o sesión expirada."}
-    B/Config/SecurityConfig.java:144  403 -> {"mensaje":"No tienes permisos para realizar esta operación."}
+    B/Config/SecurityConfig.java:169  401 -> {"mensaje":"Credenciales inválidas o sesión expirada."}
+    B/Config/SecurityConfig.java:179  403 -> {"mensaje":"No tienes permisos para realizar esta operación."}
   Frontend:
     F/pages/login.page.ts:56   401 en el login -> "Usuario o contraseña incorrectos."
     F/core/api.service.ts      obtenerMensajeError(): muestra el mensaje del backend
                                (403 -> "No tienes permisos para realizar esta operación.")
     F/core/auth.guard.ts:32    pagina de ADMIN abierta por un USER -> aviso rojo
+
+--------------------------------------------------------------------------------
+REGISTRO DE CLIENTES (opcional de la rubrica: usuarios en PostgreSQL)
+--------------------------------------------------------------------------------
+  Para que un cliente nuevo pueda comprar, primero crea su cuenta.
+  Backend:
+    B/Controller/PublicoController.java:59  POST /api/publico/registro (PUBLICO)
+      valida nombre (3+ letras), correo, telefono (7-15 digitos) y contrasena
+      (6+ caracteres); 409 si el correo ya existe; guarda la contrasena con BCrypt.
+    B/Entities/usuario.java:47      campo contrasena con @JsonIgnore (nunca sale en el JSON)
+    B/Config/SecurityConfig.java:84 UserDetailsService que busca en DOS lugares:
+      :110 primero en memoria (InMemoryUserDetailsManager: admin, juan, maria)
+      :115 luego en PostgreSQL (clientes registrados, rol USER; si el admin los
+           desactiva ya no pueden entrar)
+  Frontend:
+    F/pages/login.page.html:61     enlace "¿No tienes cuenta? Regístrate gratis"
+    F/pages/registro.page.ts:28    formulario reactivo (5 campos, validaciones y
+                                   "Las contraseñas no coinciden")
+    F/pages/registro.page.ts:80    POST publico/registro y luego inicia sesion solo
+  Prueba: /registro -> crear cuenta -> entra directo a "Mis reservas" como Cliente.
+  curl.exe -i -X POST -H "Content-Type: application/json" -d "{\"nombreCompleto\":\"Ana Ruiz\",\"correo\":\"ana@correo.com\",\"telefono\":\"3001112233\",\"contrasena\":\"ana12345\"}" http://localhost:8080/api/publico/registro
+  -> 201. Luego: curl.exe -i -u ana@correo.com:ana12345 http://localhost:8080/api/auth/me -> 200 USER
 
 --------------------------------------------------------------------------------
 10. PRUEBAS DE SEGURIDAD (4 situaciones)
@@ -178,7 +205,7 @@ Mecanismo usado: HTTP BASIC, SIN SESION (no usamos JWT ni cookies).
        cualquiera puede decodificarlo, por eso en produccion se usa HTTPS.
        (En la sustentacion, ocultar el valor: no mostrar la cabecera completa.)
     4. La respuesta NO trae Set-Cookie: el servidor no crea sesion (STATELESS,
-       B/Config/SecurityConfig.java:103). Por eso el navegador debe enviar la
+       B/Config/SecurityConfig.java:137). Por eso el navegador debe enviar la
        cabecera Authorization en CADA peticion.
   Application (F12 -> Application -> Session Storage -> http://localhost:4200):
     partyplan.token    = el valor Base64 (ocultarlo en la sustentacion)
@@ -188,7 +215,7 @@ Mecanismo usado: HTTP BASIC, SIN SESION (no usamos JWT ni cookies).
     pestana. Al cerrar sesion se borran los 3 valores.
   Quien agrega la cabecera: F/core/api.service.ts:33 crearOpciones() en cada peticion.
   Como lo valida el backend: Spring Security lee la cabecera, decodifica el
-  Base64, busca el usuario en InMemoryUserDetailsManager y compara la
+  Base64, busca el usuario (en memoria o en PostgreSQL) y compara la
   contrasena con BCrypt. Si no coincide -> 401. Si coincide pero el rol no
   alcanza -> 403.
 
