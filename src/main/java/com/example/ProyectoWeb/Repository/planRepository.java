@@ -12,4 +12,6 @@ public interface planRepository extends JpaRepository<plan, Long> {
     List<plan> findByTipoIgnoreCase(String tipo);
 
     List<plan> findByPrecioLessThanEqual(BigDecimal precioMaximo);
+
+    boolean existsByNombre(String nombre);
 }

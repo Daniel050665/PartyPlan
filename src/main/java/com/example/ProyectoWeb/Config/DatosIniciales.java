@@ -160,6 +160,38 @@ public class DatosIniciales {
             guardarLugarSiNoExiste(lugarRepository, "Monserrate", "Mirador", "Cerro de Monserrate", 1500);
             guardarLugarSiNoExiste(lugarRepository, "Chorro de Quevedo", "Plaza", "Calle 13 #2-14", 500);
 
+            // Planes adicionales para que el catalogo no se vea vacio.
+            // Solo se agregan si todavia no existen (se busca por nombre).
+            // -- Culturales --
+            guardarPlanSiNoExiste(planRepository, "CULTURAL", "Museos del Centro Histórico",
+                    "Museo del Oro, Museo Botero y Casa de Moneda con guía bilingüe.", "45000");
+            guardarPlanSiNoExiste(planRepository, "CULTURAL", "Graffiti Tour La Candelaria",
+                    "Recorrido de arte urbano por La Candelaria junto a artistas locales.", "35000");
+            guardarPlanSiNoExiste(planRepository, "CULTURAL", "Monserrate al Amanecer",
+                    "Subida en teleférico, desayuno santafereño y vista de toda la ciudad.", "55000");
+            guardarPlanSiNoExiste(planRepository, "CULTURAL", "Noche de Ópera en el Teatro Colón",
+                    "Visita guiada al teatro y función de ópera en platea.", "120000");
+            guardarPlanSiNoExiste(planRepository, "CULTURAL", "Ruta del Café Bogotano",
+                    "Cata en tres tostadores de café de especialidad en Chapinero.", "50000");
+            // -- Nocturnos --
+            guardarPlanSiNoExiste(planRepository, "NOCTURNO", "Salsa en Chapinero",
+                    "Clase de salsa caleña y noche de baile en un bar de salsa clásica.", "70000");
+            guardarPlanSiNoExiste(planRepository, "NOCTURNO", "Rooftops de Bogotá",
+                    "Recorrido por tres terrazas con coctelería de autor y vista nocturna.", "90000");
+            guardarPlanSiNoExiste(planRepository, "NOCTURNO", "Theatron VIP",
+                    "Entrada VIP, zona preferencial y dos horas de barra libre.", "150000");
+            guardarPlanSiNoExiste(planRepository, "NOCTURNO", "Jazz en Usaquén",
+                    "Cena en el barrio colonial de Usaquén con jazz en vivo.", "85000");
+            guardarPlanSiNoExiste(planRepository, "NOCTURNO", "Tejo y Cerveza Artesanal",
+                    "Partida de tejo con cervezas de cervecerías bogotanas.", "40000");
+            // -- Mixtos --
+            guardarPlanSiNoExiste(planRepository, "MIXTO", "Domingo en Usaquén",
+                    "Mercado de pulgas por la mañana y tarde de bares en la plaza.", "65000");
+            guardarPlanSiNoExiste(planRepository, "MIXTO", "Paloquemao y Clase de Cocina",
+                    "Visita a la plaza de Paloquemao y clase para preparar ajiaco.", "75000");
+            guardarPlanSiNoExiste(planRepository, "MIXTO", "Ciclovía y Cerveza en La Macarena",
+                    "Recorrido en bicicleta por el centro y cierre con cerveza en La Macarena.", "60000");
+
             reserva reserva1;
             reserva reserva2;
             reserva reserva3;
@@ -240,6 +272,20 @@ public class DatosIniciales {
             }
 
         };
+    }
+
+    private static void guardarPlanSiNoExiste(planRepository repositorio, String tipo, String nombre,
+            String descripcion, String precio) {
+        if (!repositorio.existsByNombre(nombre)) {
+            repositorio.save(
+                    plan.builder()
+                            .tipo(tipo)
+                            .nombre(nombre)
+                            .descripcion(descripcion)
+                            .precio(new BigDecimal(precio))
+                            .build()
+            );
+        }
     }
 
     private static void guardarLugarSiNoExiste(lugarRepository repositorio, String nombre,
